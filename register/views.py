@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
 from django.conf import settings
@@ -9,7 +10,7 @@ from .models import EmailConfirm
 
 
 def send_email_confirmation(user):
-    code = randint(100000, 999999)
+    code = randint(1000, 9999)
 
     EmailConfirm.objects.update_or_create(
         user=user,
@@ -47,6 +48,7 @@ def register_view(request):
             password=password1,
             is_active=False
         )
+        print(request.method)
 
         send_email_confirmation(user)
         return render(request, "accounts/confirm.html", {"email": email})
@@ -57,17 +59,50 @@ def confirm_email(request):
     if request.method == "POST":
         email = request.POST.get("email")
         code = request.POST.get("code")
+
         user = User.objects.filter(email=email).first()
         if not user:
             return render(request, "accounts/confirm.html", {"error": "Email not found."})
 
-        confirm = EmailConfirm.objects.filter(user=user).first()
+        confirm = EmailConfirm.objects.filter(user=user, code=code).first()
 
-        if not confirm or confirm.code != code:
-            return render(request, "accounts/confirm.html", {"email": email,"error": "Invalid confirmation code."})
+        if not confirm:
+            return render(request, "accounts/confirm.html", {
+                "email": email,
+                "error": "Invalid confirmation code."
+            })
+
         user.is_active = True
         user.save()
+
         login(request, user)
         return redirect("home")
+
     return render(request, "accounts/confirm.html")
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if not user:
+            inactive = User.objects.filter(username=username, is_active=False).exists()
+            if inactive:
+                return redirect('confirm')
+
+            return render(request, "accounts/login.html", {
+                "error": "Invalid username or password."
+            })
+
+        login(request, user)
+        return redirect("home")
+
+    return render(request, "accounts/login.html")
     
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+            
+            

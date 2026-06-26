@@ -1,0 +1,53 @@
+{% load static  %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение аккаунта</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2>Код подтверждения</h2>
+        <p class="subtitle">Мы отправили одноразовый код. Введите его ниже для активации.</p>
+
+        <form method="POST">
+    {% csrf_token %}
+
+    <input type="hidden" name="email" value="{{ email }}">
+
+    <div class="code-inputs">
+        <input type="text" name="c1" maxlength="1" required>
+        <input type="text" name="c2" maxlength="1" required>
+        <input type="text" name="c3" maxlength="1" required>
+        <input type="text" name="c4" maxlength="1" required>
+    </div>
+
+    <button type="submit">Подтвердить</button>
+</form>
+
+        <div class="auth-footer">
+            Не получили код? <a href="#">Отправить повторно</a>
+        </div>
+    </div>
+
+    <script>
+        // Небольшой скрипт для удобства: автоматический фокус на следующее поле при вводе цифры
+        const inputs = document.querySelectorAll('.code-inputs input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', () => {
+                if (input.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class Ingredient(models.Model):
@@ -19,7 +20,7 @@ class Recipe(models.Model):
     difficulty = models.CharField(max_length=10,choices=DIFFICULTY_CHOICES,default='easy')
     image = models.ImageField(upload_to='recipes/',blank=True,null=True)
     ingredients = models.ManyToManyField(Ingredient,through='RecipeIngredient',related_name='recipes')
-    created_by = models.ForeignKey(User,on_delete=models.CASCADE,related_name='recipes')
+    created_by = models.ForeignKey( settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='recipes')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -37,7 +38,7 @@ class RecipeIngredient(models.Model):
 
 
 class Favorite(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey( settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
@@ -48,7 +49,7 @@ class Favorite(models.Model):
 
 
 class AIRecipeRequest(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey( settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     ingredients_text = models.TextField(blank=True,null=True,help_text='Products entered by user')
     image = models.ImageField(upload_to='ingredient_images/',blank=True,null=True)
     detected_ingredients = models.TextField(blank=True,null=True)
@@ -59,7 +60,7 @@ class AIRecipeRequest(models.Model):
         return f'AI Request #{self.id}'
 
 class Review(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey( settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe,on_delete=models.CASCADE,related_name='reviews')
     rating = models.PositiveSmallIntegerField()
     comment = models.TextField(blank=True)
