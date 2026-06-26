@@ -13,20 +13,17 @@
         <h2>Код подтверждения</h2>
         <p class="subtitle">Мы отправили одноразовый код. Введите его ниже для активации.</p>
 
-        <form method="POST">
-    {% csrf_token %}
+        <form action="" method="POST">
+             {% csrf_token %}
+            <div class="code-inputs">
+                <input type="text" maxlength="1" required autocomplete="off" autofocus>
+                <input type="text" maxlength="1" required autocomplete="off">
+                <input type="text" maxlength="1" required autocomplete="off">
+                <input type="text" maxlength="1" required autocomplete="off">
+            </div>
 
-    <input type="hidden" name="email" value="{{ email }}">
-
-    <div class="code-inputs">
-        <input type="text" name="c1" maxlength="1" required>
-        <input type="text" name="c2" maxlength="1" required>
-        <input type="text" name="c3" maxlength="1" required>
-        <input type="text" name="c4" maxlength="1" required>
-    </div>
-
-    <button type="submit">Подтвердить</button>
-</form>
+            <button type="submit" class="btn-submit">Подтвердить</button>
+        </form>
 
         <div class="auth-footer">
             Не получили код? <a href="#">Отправить повторно</a>
