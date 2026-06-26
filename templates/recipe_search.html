@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>✍️ Enter Ingredients</h1>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <textarea name="ingredients" rows="5" placeholder="яйца, хлеб, сыр"></textarea>
+
+    <br>
+
+    <button type="submit">Получить рецепт</button>
+</form>
+
+<hr>
+
+{% if result %}
+
+    <h2>📦 Продукты:</h2>
+
+    <ul>
+        {% for item in result.ingredients %}
+            <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>🍳 AI рецепт:</h2>
+
+    <pre>{{ result.recipe }}</pre>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>📸 Загрузка фото продуктов</h1>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="file" name="image">
+
+    <br><br>
+    <button type="submit">Анализировать</button>
+</form>
+
+{% endblock %}
