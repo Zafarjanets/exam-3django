@@ -1,9 +1,40 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
 
-<h1>⭐ Избранные рецепты</h1>
+<h1>❤️ Favorite Recipes</h1>
 
-<p>Здесь будут сохранённые рецепты пользователя.</p>
+{% if favorites %}
+
+    {% for item in favorites %}
+
+        <div style="border:1px solid #ccc;padding:15px;margin:15px;">
+
+            {% if item.recipe.image %}
+                <img src="{{ item.recipe.image.url }}" width="220">
+            {% endif %}
+
+            <h3>{{ item.recipe.title }}</h3>
+
+            <p>{{ item.recipe.description }}</p>
+
+            <p>
+                <strong>Cooking time:</strong>
+                {{ item.recipe.cooking_time }} min
+            </p>
+
+            <a href="{% url 'remove_favorite' item.recipe.id %}">
+                ❌ Remove
+            </a>
+
+        </div>
+
+    {% endfor %}
+
+{% else %}
+
+<h3>You don't have favorite recipes yet.</h3>
+
+{% endif %}
 
 {% endblock %}

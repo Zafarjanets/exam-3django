@@ -1,6 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect,get_object_or_404
 from groq import Groq
-from dotenv import OPENAI_API_KEY
+from .utils import detect_products
+from .models import AIRecipeRequest
+from .utils import detect_products
+from .models import Recipe, Favorite
+
+
 
 # ----------------------------------------------------------------------
 
@@ -8,7 +13,7 @@ def home(request):
     return render(request, 'home.html')
 
 # -----------------------------------------------------------------------------
-client = Groq(api_key=OPENAI_API_KEY)
+client = Groq(api_key="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")
 def recipe_search(request):
     result = None
 
@@ -73,12 +78,75 @@ def recipe_search(request):
 def image_search(request):
     return render(request, 'image_search.html')
 
+
+def upload_photo(request):
+    if request.method == "POST":
+        image = request.FILES.get("image")
+        
+
+        obj = AIRecipeRequest.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            image=image,
+            ai_response=""
+        )
+
+        products = detect_products(obj.image.path)
+
+        obj.detected_ingredients = ",".join(products)
+        obj.save()
+        print(request.POST)
+        print(request.FILES)
+        return render(request, "result.html", {
+            "products": products
+        })
+        
+
+    return render(request, "upload.html")
 # --------------------------------------------------------------------------------------------
 def favorites(request):
     return render(request, 'favorites.html')
 
-def history(request):
-    return render(request, 'history.html')
+def add_favorite(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
 
+    Favorite.objects.get_or_create(
+        user=request.user,
+        recipe=recipe
+    )
+
+    return redirect('favorites')
+
+def remove_favorite(request, recipe_id):
+    Favorite.objects.filter(
+        user=request.user,
+        recipe_id=recipe_id
+    ).delete()
+
+    return redirect('favorites')
+
+def favorites(request):
+    favorites = Favorite.objects.filter(
+        user=request.user
+    ).select_related('recipe')
+
+    return render(request, 'favorites.html', {
+        'favorites': favorites
+    })
+# --------------------------------------------------------------------
+
+def history(request):
+    items = AIRecipeRequest.objects.all().order_by('-created_at')
+
+    return render(request, "history.html", {"items": items})
+def history(request):
+    items = AIRecipeRequest.objects.filter(
+        user=request.user
+    ).order_by('-created_at')
+
+    return render(request, "history.html", {
+        "items": items
+    })
+    
+# ------------------------------------------------------------------------------------------------
 def profile(request):
     return render(request, 'profile.html')

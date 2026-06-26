@@ -52,7 +52,7 @@ class AIRecipeRequest(models.Model):
     ingredients_text = models.TextField(blank=True,null=True,help_text='Products entered by user')
     image = models.ImageField(upload_to='ingredient_images/',blank=True,null=True)
     detected_ingredients = models.TextField(blank=True,null=True)
-    ai_response = models.TextField()
+    ai_response = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
