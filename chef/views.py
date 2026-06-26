@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from groq import Groq
+from dotenv import OPENAI_API_KEY
 
 # ----------------------------------------------------------------------
 
@@ -7,7 +8,7 @@ def home(request):
     return render(request, 'home.html')
 
 # -----------------------------------------------------------------------------
-client = Groq(api_key="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")
+client = Groq(api_key=OPENAI_API_KEY)
 def recipe_search(request):
     result = None
 
