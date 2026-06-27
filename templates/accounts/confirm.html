@@ -1,37 +1,53 @@
-{% load static  %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Подтверждение аккаунта</title>
+    <title>Подтверждение аккаунта | AI Recipe Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
-    <div class="auth-container">
-        <h2>Код подтверждения</h2>
-        <p class="subtitle">Мы отправили одноразовый код. Введите его ниже для активации.</p>
+    <div class="auth-page-wrapper">
+        <div class="auth-container">
+            <div style="text-align: center; margin-bottom: 15px; font-size: 32px;">🔑</div>
+            <h2>Код подтверждения</h2>
+            <p class="subtitle">Мы отправили код активации. Введите его ниже для подтверждения почты.</p>
 
-        <form action="" method="POST">
-             {% csrf_token %}
-            <div class="code-inputs">
-                <input type="text" maxlength="1" required autocomplete="off" autofocus>
-                <input type="text" maxlength="1" required autocomplete="off">
-                <input type="text" maxlength="1" required autocomplete="off">
-                <input type="text" maxlength="1" required autocomplete="off">
+            {% if error %}
+                <div class="alert alert-danger" style="margin-bottom: 20px;">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <input type="hidden" name="email" value="{{ email }}">
+
+                <div class="code-inputs">
+                    <input type="text" name="c1" maxlength="1" required autocomplete="off">
+                    <input type="text" name="c2" maxlength="1" required autocomplete="off">
+                    <input type="text" name="c3" maxlength="1" required autocomplete="off">
+                    <input type="text" name="c4" maxlength="1" required autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn-submit">Активировать аккаунт</button>
+            </form>
+
+            <div class="auth-footer">
+                Не получили код? <a href="#" onclick="alert('Письмо отправлено повторно!');">Отправить ещё раз</a>
             </div>
-
-            <button type="submit" class="btn-submit">Подтвердить</button>
-        </form>
-
-        <div class="auth-footer">
-            Не получили код? <a href="#">Отправить повторно</a>
+            
+            <div style="text-align: center; margin-top: 25px; font-size: 13px;">
+                <a href="{% url 'register' %}" style="color: var(--text-secondary); text-decoration: none;">← К регистрации</a>
+            </div>
         </div>
     </div>
 
     <script>
-        // Небольшой скрипт для удобства: автоматический фокус на следующее поле при вводе цифры
         const inputs = document.querySelectorAll('.code-inputs input');
         inputs.forEach((input, index) => {
             input.addEventListener('input', () => {
@@ -45,6 +61,8 @@
                 }
             });
         });
+        // Auto-focus first input on load
+        if(inputs.length > 0) inputs[0].focus();
     </script>
 </body>
 </html>

@@ -1,35 +1,63 @@
 {% extends "base.html" %}
 
+{% block title %}Поиск по ингредиентам | AI Recipe Assistant{% endblock %}
+
 {% block content %}
+<div class="form-card glass-panel">
+    <h2 style="text-align: center; margin-bottom: 10px;">✍️ Введите ингредиенты</h2>
+    <p style="color: var(--text-secondary); text-align: center; margin-bottom: 30px;">
+        Введите список имеющихся у вас продуктов через запятую, и наш ИИ сгенерирует для вас пошаговый рецепт.
+    </p>
 
-<h1>✍️ Enter Ingredients</h1>
+    <form method="POST" id="search-form">
+        {% csrf_token %}
 
-<form method="POST">
-    {% csrf_token %}
+        <div class="form-group">
+            <label for="ingredients">Ингредиенты (через запятую)</label>
+            <textarea id="ingredients" name="ingredients" rows="4" placeholder="Например: яйца, хлеб, помидор, сыр" required>{% if request.POST.ingredients %}{{ request.POST.ingredients }}{% endif %}</textarea>
+        </div>
 
-    <textarea name="ingredients" rows="5" placeholder="яйца, хлеб, сыр"></textarea>
-
-    <br>
-
-    <button type="submit">Получить рецепт</button>
-</form>
-
-<hr>
+        <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-btn">
+            <span>🍳 Получить рецепт</span>
+        </button>
+    </form>
+</div>
 
 {% if result %}
+<div class="recipe-container glass-panel" style="margin-top: 40px; padding: 30px; border-radius: 16px;">
+    <div class="recipe-result-header">
+        <div>
+            <h2>✨ AI Рецепт блюда</h2>
+            <div class="recipe-badges">
+                <span class="badge badge-success">✓ Готово</span>
+                <span class="badge">Llama 3.1 AI</span>
+            </div>
+        </div>
+    </div>
 
-    <h2>📦 Продукты:</h2>
-
-    <ul>
+    <h3 style="font-size: 18px; margin-bottom: 10px;">📦 Использованные продукты:</h3>
+    <div class="recipe-badges" style="margin-bottom: 25px; display: flex; gap: 8px; flex-wrap: wrap;">
         {% for item in result.ingredients %}
-            <li>{{ item }}</li>
+            <span class="badge badge-ingredients">{{ item }}</span>
         {% endfor %}
-    </ul>
+    </div>
 
-    <h2>🍳 AI рецепт:</h2>
-
-    <pre>{{ result.recipe }}</pre>
-
+    <h3 style="font-size: 18px; margin-bottom: 10px;">📖 Рецепт и шаги приготовления:</h3>
+    <pre class="recipe-body">{{ result.recipe }}</pre>
+</div>
 {% endif %}
 
+<script>
+    document.getElementById('nav-search').classList.add('active');
+    
+    const form = document.getElementById('search-form');
+    const btn = document.getElementById('submit-btn');
+    if (form && btn) {
+        form.addEventListener('submit', () => {
+            btn.disabled = true;
+            btn.innerHTML = '⌛ Нейросеть готовит рецепт... Секунду';
+            btn.style.opacity = '0.8';
+        });
+    }
+</script>
 {% endblock %}

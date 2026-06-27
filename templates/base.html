@@ -1,68 +1,34 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>AI Recipe</title>
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: white;
-        }
-
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background: #111827;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: #38bdf8;
-        }
-
-        .menu {
-            display: flex;
-            gap: 20px;
-        }
-
-        .menu a {
-            color: white;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-
-        .menu a:hover {
-            background: #38bdf8;
-            color: black;
-        }
-
-        .container {
-            padding: 30px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Recipe Assistant{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
-
 <body>
 
 <div class="navbar">
-    <div class="logo">🍳 AI Recipe</div>
+    <a href="/" class="logo">
+        🍳 <span>AI Recipe</span>
+    </a>
 
     <div class="menu">
-        <a href="/">Home</a>
-        <a href="/search/">Recipe</a>
-        <a href="/image/">Photo</a>
-        <a href="/favorites/">Favorites</a>
-        <a href="/history/">History</a>
-        <a href="/profile/">Profile</a>
+        <a href="/" id="nav-home">🏠 Главная</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'recipe_search' %}" id="nav-search">✍️ Ингредиенты</a>
+            <a href="{% url 'image_search' %}" id="nav-image">📸 По фото</a>
+            <a href="{% url 'favorites' %}" id="nav-favorites">⭐ Избранное</a>
+            <a href="{% url 'history' %}" id="nav-history">📜 История</a>
+            <a href="{% url 'profile' %}" id="nav-profile" class="btn-nav-accent">👤 {{ user.username }}</a>
+        {% else %}
+            <a href="{% url 'login' %}" id="nav-login" class="btn-nav-accent">🔑 Войти</a>
+        {% endif %}
     </div>
 </div>
 

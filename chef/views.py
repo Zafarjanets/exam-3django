@@ -1,11 +1,11 @@
-from django.shortcuts import render,redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from groq import Groq
 from .utils import detect_products
-from .models import AIRecipeRequest
-from .utils import detect_products
-from .models import Recipe, Favorite
+from .models import AIRecipeRequest, Recipe, Favorite
 
-
+# Initialize Groq Client
+client = Groq(api_key="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")
 
 # ----------------------------------------------------------------------
 
@@ -13,14 +13,12 @@ def home(request):
     return render(request, 'home.html')
 
 # -----------------------------------------------------------------------------
-client = Groq(api_key="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")
+
+@login_required
 def recipe_search(request):
     result = None
-
     if request.method == "POST":
         ingredients = request.POST.get("ingredients")
-
-        print("INPUT:", ingredients)
 
         if ingredients:
             prompt = f"""
@@ -74,38 +72,99 @@ def recipe_search(request):
             }
 
     return render(request, "recipe_search.html", {"result": result})
+
 # ---------------------------------------------------------------------------------------------------
+
+@login_required
 def image_search(request):
-    return render(request, 'image_search.html')
-
-
-def upload_photo(request):
+    result = None
+    error = None
     if request.method == "POST":
         image = request.FILES.get("image")
-        
+        if not image:
+            error = "Пожалуйста, выберите фото продуктов."
+        else:
+            try:
+                # 1. Create request record in DB
+                obj = AIRecipeRequest.objects.create(
+                    user=request.user,
+                    image=image,
+                    detected_ingredients="",
+                    ai_response=""
+                )
 
-        obj = AIRecipeRequest.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            image=image,
-            ai_response=""
-        )
+                # 2. Run YOLO product detection
+                products = detect_products(obj.image.path)
 
-        products = detect_products(obj.image.path)
+                if not products:
+                    error = "Не удалось распознать продукты на фото. Пожалуйста, попробуйте другое изображение."
+                    obj.delete()
+                else:
+                    ingredients_str = ", ".join(products)
 
-        obj.detected_ingredients = ",".join(products)
-        obj.save()
-        print(request.POST)
-        print(request.FILES)
-        return render(request, "result.html", {
-            "products": products
-        })
-        
+                    # 3. Call Groq to generate recipe from detected ingredients
+                    prompt = f"""
+Ты — СТРОГИЙ кулинарный AI.
 
-    return render(request, "upload.html")
+❗ КРИТИЧЕСКИЕ ПРАВИЛА:
+- Используй ТОЛЬКО входные ингредиенты
+- НИКОГДА не добавляй новые продукты
+- НЕ исправляй слова пользователя (писать как есть)
+- НЕ добавляй “яйца, молоко, масло” если их нет во входе
+- НЕ улучшай текст пользователя
+
+ИНГРЕДИЕНТЫ (обнаруженные на фото):
+{ingredients_str}
+
+❗ ЗАДАЧА:
+Создай реальный рецепт только из этих продуктов.
+
+ФОРМАТ:
+Название блюда:
+...
+
+Ингредиенты:
+...
+
+Шаги:
+1.
+...
+
+Время:
+Сложность:
+"""
+                    response = client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[
+                            {"role": "user", "content": prompt}
+                        ]
+                    )
+                    ai_text = response.choices[0].message.content
+
+                    # 4. Save results to DB
+                    obj.detected_ingredients = ingredients_str
+                    obj.ai_response = ai_text
+                    obj.save()
+
+                    result = obj
+            except Exception as e:
+                error = f"Произошла ошибка при анализе: {str(e)}"
+
+    return render(request, 'image_search.html', {'result': result, 'error': error})
+
 # --------------------------------------------------------------------------------------------
-def favorites(request):
-    return render(request, 'favorites.html')
 
+@login_required
+def favorites(request):
+    favorites = Favorite.objects.filter(
+        user=request.user
+    ).select_related('recipe')
+
+    return render(request, 'favorites.html', {
+        'favorites': favorites
+    })
+
+@login_required
 def add_favorite(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id)
 
@@ -116,6 +175,7 @@ def add_favorite(request, recipe_id):
 
     return redirect('favorites')
 
+@login_required
 def remove_favorite(request, recipe_id):
     Favorite.objects.filter(
         user=request.user,
@@ -124,20 +184,9 @@ def remove_favorite(request, recipe_id):
 
     return redirect('favorites')
 
-def favorites(request):
-    favorites = Favorite.objects.filter(
-        user=request.user
-    ).select_related('recipe')
-
-    return render(request, 'favorites.html', {
-        'favorites': favorites
-    })
 # --------------------------------------------------------------------
 
-def history(request):
-    items = AIRecipeRequest.objects.all().order_by('-created_at')
-
-    return render(request, "history.html", {"items": items})
+@login_required
 def history(request):
     items = AIRecipeRequest.objects.filter(
         user=request.user
@@ -146,7 +195,16 @@ def history(request):
     return render(request, "history.html", {
         "items": items
     })
-    
+
 # ------------------------------------------------------------------------------------------------
+
+@login_required
 def profile(request):
-    return render(request, 'profile.html')
+    # Retrieve some stats to display on profile
+    history_count = AIRecipeRequest.objects.filter(user=request.user).count()
+    favorites_count = Favorite.objects.filter(user=request.user).count()
+    context = {
+        'history_count': history_count,
+        'favorites_count': favorites_count
+    }
+    return render(request, 'profile.html', context)

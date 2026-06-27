@@ -58,27 +58,28 @@ def register_view(request):
 def confirm_email(request):
     if request.method == "POST":
         email = request.POST.get("email")
-        code = request.POST.get("code")
+
+        code = (
+            request.POST.get("c1", "") +
+            request.POST.get("c2", "") +
+            request.POST.get("c3", "") +
+            request.POST.get("c4", "")
+        ).strip()
 
         user = User.objects.filter(email=email).first()
         if not user:
             return render(request, "accounts/confirm.html", {"error": "Email not found."})
-
         confirm = EmailConfirm.objects.filter(user=user, code=code).first()
-
         if not confirm:
-            return render(request, "accounts/confirm.html", {
-                "email": email,
-                "error": "Invalid confirmation code."
-            })
-
+            return render(request, "accounts/confirm.html", {"email": email,"error": "Invalid confirmation code."})
         user.is_active = True
         user.save()
 
-        login(request, user)
+        login(request, user, backend='register.backends.EmailOrUsernameBackend')
         return redirect("home")
 
     return render(request, "accounts/confirm.html")
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
