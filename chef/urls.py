@@ -12,5 +12,5 @@ urlpatterns = [
     path('favorite/add/<int:recipe_id>/', views.add_favorite, name='add_favorite'),
     path('favorite/remove/<int:recipe_id>/', views.remove_favorite, name='remove_favorite'),
     path('history/', views.history, name='history'),
-    path('profile/', views.profile, name='profile'),
+    path('profile/', views.profile, name='profile')
 ]
