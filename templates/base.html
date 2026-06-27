@@ -13,21 +13,29 @@
 </head>
 <body>
 
+<div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+<div id="floating-icons" class="floating-icons" aria-hidden="true"></div>
+
 <div class="navbar">
     <a href="/" class="logo">
-        🍳 <span>Zaf Chef</span>
+        <span class="logo-icon icon-bounce">🍳</span>
+        <span>Zaf Chef</span>
     </a>
 
     <div class="menu">
-        <a href="/" id="nav-home">🏠 Главная</a>
+        <a href="/" id="nav-home"><span class="nav-emoji">🏠</span> Главная</a>
         {% if user.is_authenticated %}
-            <a href="{% url 'recipe_search' %}" id="nav-search">✍️ Ингредиенты</a>
-            <a href="{% url 'image_search' %}" id="nav-image">📸 По фото</a>
-            <a href="{% url 'favorites' %}" id="nav-favorites">⭐ Избранное</a>
-            <a href="{% url 'history' %}" id="nav-history">📜 История</a>
-            <a href="{% url 'profile' %}" id="nav-profile" class="btn-nav-accent">👤 {{ user.username }}</a>
+            <a href="{% url 'recipe_search' %}" id="nav-search"><span class="nav-emoji">✍️</span> Ингредиенты</a>
+            <a href="{% url 'image_search' %}" id="nav-image"><span class="nav-emoji">📸</span> По фото</a>
+            <a href="{% url 'favorites' %}" id="nav-favorites"><span class="nav-emoji">⭐</span> Избранное</a>
+            <a href="{% url 'history' %}" id="nav-history"><span class="nav-emoji">📜</span> История</a>
+            <a href="{% url 'profile' %}" id="nav-profile" class="btn-nav-accent"><span class="nav-emoji">👤</span> {{ user.username }}</a>
         {% else %}
-            <a href="{% url 'login' %}" id="nav-login" class="btn-nav-accent">🔑 Войти</a>
+            <a href="{% url 'login' %}" id="nav-login" class="btn-nav-accent"><span class="nav-emoji">🔑</span> Войти</a>
         {% endif %}
     </div>
 </div>
@@ -37,5 +45,7 @@
     {% endblock %}
 </div>
 
+<script src="{% static 'app.js' %}" defer></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

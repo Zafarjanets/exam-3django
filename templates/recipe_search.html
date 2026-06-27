@@ -3,73 +3,74 @@
 {% block title %}Поиск по ингредиентам | AI Recipe Assistant{% endblock %}
 
 {% block content %}
-<div class="form-card glass-panel">
-    <h2 style="text-align: center; margin-bottom: 10px;">✍️ Введите ингредиенты</h2>
-    <p style="color: var(--text-secondary); text-align: center; margin-bottom: 30px;">
-        Введите список имеющихся у вас продуктов через запятую — ИИ предложит несколько вариантов блюд на выбор.
-    </p>
+<section class="page-hero reveal">
+    <span class="page-hero-icon icon-bounce">✍️</span>
+    <h1 class="gradient-title">Поиск по ингредиентам</h1>
+    <p>Введите продукты — ИИ предложит несколько красивых вариантов блюд</p>
+</section>
 
+<div class="form-card glass-panel reveal">
     {% if error %}
-        <div class="alert alert-danger" style="margin-bottom: 20px;">{{ error }}</div>
+        <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
 
     <form method="POST" id="search-form">
         {% csrf_token %}
-
         <div class="form-group">
-            <label for="ingredients">Ингредиенты (через запятую)</label>
+            <label for="ingredients"><span class="label-icon">🥕</span> Ингредиенты (через запятую)</label>
             <textarea id="ingredients" name="ingredients" rows="4" placeholder="Например: яйца, хлеб, помидор, сыр" required>{% if request.POST.ingredients %}{{ request.POST.ingredients }}{% endif %}</textarea>
         </div>
-
-        <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-btn">
-            <span>🍳 Получить варианты блюд</span>
+        <button type="submit" class="btn btn-primary btn-glow" style="width: 100%;" id="submit-btn">
+            <span class="btn-icon icon-bounce">🍳</span>
+            <span>Получить варианты блюд</span>
         </button>
     </form>
 </div>
 
 {% if dishes %}
-<div style="margin-top: 40px;">
-    <h2 style="text-align: center; margin-bottom: 10px;">✨ ИИ предложил {{ dishes|length }} варианта</h2>
-    <p style="color: var(--text-secondary); text-align: center; margin-bottom: 30px;">
-        Выберите понравившееся блюдо, чтобы прочитать полный рецепт и добавить в избранное
-    </p>
-
-    {% if ingredients_list %}
-    <div class="recipe-badges" style="margin-bottom: 25px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-        {% for item in ingredients_list %}
-            <span class="badge badge-ingredients">{{ item }}</span>
-        {% endfor %}
+<section class="results-section reveal">
+    <div class="section-header centered">
+        <span class="section-icon sparkle">✨</span>
+        <div>
+            <h2>ИИ предложил {{ dishes|length }} варианта</h2>
+            <p>Выберите блюдо — откроется рецепт, видео и избранное</p>
+        </div>
     </div>
+
+    {% if ingredients_json %}
+    <div id="search-ingredients" class="recipe-badges centered-badges"></div>
+    {{ ingredients_json|json_script:"search-ingredients-json" }}
     {% endif %}
 
-    <div class="dish-options-grid">
-        {% for dish in dishes %}
-            <a href="{% url 'ai_dish_detail' dish.id %}" class="dish-option-card glass-panel">
-                <div class="dish-option-icon">🍲</div>
-                <h3>{{ dish.title }}</h3>
-                <p>{{ dish.summary }}</p>
-                <div class="recipe-badges" style="margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap;">
-                    <span class="badge">⏱️ {{ dish.cooking_time }} мин</span>
-                    <span class="badge badge-success">{{ dish.get_difficulty_display }}</span>
-                </div>
-                <span class="dish-option-link">Читать рецепт →</span>
-            </a>
-        {% endfor %}
-    </div>
-</div>
+    <div id="dishes-grid" class="dish-options-grid"></div>
+    {{ dishes_json|json_script:"dishes-json" }}
+</section>
 {% endif %}
 
 <script>
     document.getElementById('nav-search').classList.add('active');
-    
+
     const form = document.getElementById('search-form');
     const btn = document.getElementById('submit-btn');
     if (form && btn) {
         form.addEventListener('submit', () => {
             btn.disabled = true;
-            btn.innerHTML = '⌛ ИИ подбирает варианты блюд...';
-            btn.style.opacity = '0.8';
+            btn.innerHTML = '<span class="btn-loading"><span class="spin-icon">⌛</span> ИИ готовит варианты...</span>';
         });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const data = document.getElementById('search-ingredients-json');
+        const wrap = document.getElementById('search-ingredients');
+        if (data && wrap) {
+            JSON.parse(data.textContent).forEach((name, i) => {
+                const span = document.createElement('span');
+                span.className = 'badge badge-ingredients badge-animated ingredient-pop';
+                span.style.animationDelay = `${i * 0.06}s`;
+                span.innerHTML = `<span class="badge-icon">🥕</span> ${name}`;
+                wrap.appendChild(span);
+            });
+        }
+    });
 </script>
 {% endblock %}

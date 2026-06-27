@@ -4,6 +4,22 @@ from groq import Groq
 from .utils import detect_products, build_multi_dish_prompt, parse_ai_dishes
 from .models import AIRecipeRequest, Recipe, Favorite, AIDishSuggestion, Ingredient, RecipeIngredient
 
+DISH_ICONS = ['🍲', '🥘', '🍳', '🥗', '🌮', '🍕', '🥙']
+DISH_ACCENTS = ['#ff6b35', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#ef4444']
+
+
+def serialize_dish_card(dish):
+    return {
+        'id': dish.id,
+        'title': dish.title,
+        'summary': dish.summary,
+        'cooking_time': dish.cooking_time,
+        'difficulty': dish.get_difficulty_display(),
+        'url': f'/dish/{dish.id}/',
+        'icon': DISH_ICONS[dish.id % len(DISH_ICONS)],
+        'accent': DISH_ACCENTS[dish.id % len(DISH_ACCENTS)],
+    }
+
 # Initialize Groq Client
 client = Groq(api_key="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")
 
@@ -70,7 +86,9 @@ def recipe_search(request):
 
     return render(request, "recipe_search.html", {
         "dishes": dishes,
+        "dishes_json": [serialize_dish_card(d) for d in dishes] if dishes else None,
         "ingredients_list": ingredients_list,
+        "ingredients_json": ingredients_list,
         "error": error,
     })
 
@@ -121,6 +139,11 @@ def image_search(request):
     return render(request, 'image_search.html', {
         'result': result,
         'dishes': dishes,
+        'dishes_json': [serialize_dish_card(d) for d in dishes] if dishes else None,
+        'detected_ingredients_json': (
+            [i.strip() for i in result.detected_ingredients.split(',') if i.strip()]
+            if result and result.detected_ingredients else None
+        ),
         'error': error,
     })
 
@@ -134,11 +157,22 @@ def ai_dish_detail(request, dish_id):
         user=request.user,
     )
     ingredients = [i.strip() for i in dish.ingredients_text.split(",") if i.strip()]
+    if not ingredients and dish.ingredients_text:
+        ingredients = [dish.ingredients_text]
+    video_links = dish.get_video_links()
 
     return render(request, 'ai_dish_detail.html', {
         'dish': dish,
         'ingredients': ingredients,
-        'video_links': dish.get_video_links(),
+        'ingredients_json': ingredients,
+        'video_links': video_links,
+        'dish_detail_json': {
+            'title': dish.title,
+            'summary': dish.summary,
+            'instructions': dish.instructions,
+            'cooking_time': dish.cooking_time,
+            'difficulty': dish.get_difficulty_display(),
+        },
     })
 
 

@@ -3,71 +3,81 @@
 {% block title %}{{ dish.title }} | AI Recipe Assistant{% endblock %}
 
 {% block content %}
-<div class="dish-detail-header glass-panel" style="padding: 30px; border-radius: 16px; margin-bottom: 30px;">
-    <a href="javascript:history.back()" class="btn btn-secondary" style="margin-bottom: 20px; padding: 8px 16px; font-size: 13px;">
-        ← Назад к вариантам
-    </a>
+<section class="dish-hero reveal">
+    <div class="dish-hero-glow"></div>
+    <div class="dish-hero-inner glass-panel">
+        <a href="javascript:history.back()" class="btn btn-outline back-btn">
+            <span class="arrow-slide">←</span> Назад к вариантам
+        </a>
 
-    <h2 style="margin-bottom: 10px;">🍽️ {{ dish.title }}</h2>
-    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 16px;">{{ dish.summary }}</p>
+        <div class="dish-hero-top">
+            <div class="dish-hero-icon-wrap">
+                <span class="dish-hero-icon icon-bounce">🍽️</span>
+                <span class="dish-hero-ring"></span>
+            </div>
+            <div class="dish-hero-text">
+                <h1 class="gradient-title">{{ dish.title }}</h1>
+                <p class="dish-hero-summary">{{ dish.summary }}</p>
+            </div>
+        </div>
 
-    <div class="recipe-badges" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-        <span class="badge">⏱️ {{ dish.cooking_time }} мин</span>
-        <span class="badge badge-success">{{ dish.get_difficulty_display }}</span>
-        <span class="badge">🤖 AI рецепт</span>
+        <div class="recipe-badges hero-badges">
+            <span class="badge badge-animated"><span class="badge-icon spin-slow">⏱️</span> {{ dish.cooking_time }} мин</span>
+            <span class="badge badge-success badge-animated"><span class="badge-icon">✨</span> {{ dish.get_difficulty_display }}</span>
+            <span class="badge badge-purple badge-animated"><span class="badge-icon pulse-soft">🤖</span> AI рецепт</span>
+        </div>
+
+        <div class="dish-detail-actions">
+            {% if dish.is_favorited %}
+                <a href="{% url 'favorites' %}" class="btn btn-primary btn-glow">
+                    <span class="btn-icon heartbeat">❤️</span> Уже в избранном
+                </a>
+            {% else %}
+                <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary btn-glow">
+                    <span class="btn-icon heartbeat">❤️</span> Добавить в избранное
+                </a>
+            {% endif %}
+
+            {% if video_links %}
+                <a id="main-video-btn" href="{{ video_links.0.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-video btn-glow">
+                    <span class="btn-icon pulse-play">▶</span> Смотреть видео
+                </a>
+            {% endif %}
+        </div>
     </div>
-
-    <div class="dish-detail-actions" style="display: flex; flex-wrap: wrap; gap: 12px;">
-        {% if dish.is_favorited %}
-            <a href="{% url 'favorites' %}" class="btn btn-primary" style="flex: 1; min-width: 220px;">
-                ❤️ Уже в избранном — открыть
-            </a>
-        {% else %}
-            <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary" style="flex: 1; min-width: 220px;">
-                ❤️ Добавить в избранное
-            </a>
-        {% endif %}
-
-        {% if video_links %}
-            <a href="{{ video_links.0.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-video" style="flex: 1; min-width: 220px;">
-                🎬 Смотреть видео приготовления
-            </a>
-        {% endif %}
-    </div>
-</div>
+</section>
 
 {% if video_links %}
-<div class="glass-panel video-links-panel" style="padding: 25px; border-radius: 16px; margin-bottom: 30px;">
-    <h3 style="font-size: 18px; margin-bottom: 8px;">📺 Видео по этому блюду и вашим продуктам</h3>
-    <p style="color: var(--text-secondary); margin-bottom: 18px; font-size: 14px;">
-        Подборка ссылок на YouTube — рецепты по названию блюда и по вашим ингредиентам
-    </p>
-    <div class="video-links-list">
-        {% for link in video_links %}
-            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="video-link-item">
-                <span class="video-link-icon">▶</span>
-                <span>{{ link.label }}</span>
-            </a>
-        {% endfor %}
+<section class="video-section reveal">
+    <div class="section-header">
+        <span class="section-icon icon-bounce">📺</span>
+        <div>
+            <h2>Видео приготовления</h2>
+            <p>Подборка на YouTube по блюду и вашим продуктам</p>
+        </div>
     </div>
-</div>
+    <div id="video-links-list" class="video-links-list glass-panel"></div>
+    {{ video_links|json_script:"video-links-json" }}
+</section>
 {% endif %}
 
 <div class="recipe-detail-grid">
-    <div class="glass-panel" style="padding: 25px; border-radius: 16px;">
-        <h3 style="font-size: 18px; margin-bottom: 15px;">📦 Ингредиенты</h3>
-        <div class="recipe-badges" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
-            {% for item in ingredients %}
-                <span class="badge badge-ingredients">{{ item }}</span>
-            {% empty %}
-                <pre class="recipe-body" style="font-size: 14px;">{{ dish.ingredients_text }}</pre>
-            {% endfor %}
+    <div class="glass-panel recipe-panel reveal">
+        <div class="panel-header">
+            <span class="panel-icon icon-bounce">📦</span>
+            <h3>Ингредиенты</h3>
         </div>
+        <div id="ingredients-badges" class="recipe-badges ingredients-grid"></div>
+        {{ ingredients_json|json_script:"ingredients-json" }}
     </div>
 
-    <div class="glass-panel" style="padding: 25px; border-radius: 16px;">
-        <h3 style="font-size: 18px; margin-bottom: 15px;">👨‍🍳 Как приготовить</h3>
-        <pre class="recipe-body" style="font-size: 15px;">{{ dish.instructions }}</pre>
+    <div class="glass-panel recipe-panel reveal">
+        <div class="panel-header">
+            <span class="panel-icon icon-bounce">👨‍🍳</span>
+            <h3>Как приготовить</h3>
+        </div>
+        <div id="cooking-steps" class="cooking-steps"></div>
+        {{ dish_detail_json|json_script:"dish-detail-json" }}
     </div>
 </div>
 {% endblock %}
