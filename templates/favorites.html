@@ -31,6 +31,14 @@
                         </div>
                     </div>
                     
+                    {% with ai_dish=item.recipe.ai_suggestions.first %}
+                        {% if ai_dish %}
+                            <a href="{% url 'ai_dish_detail' ai_dish.id %}" class="btn btn-primary" style="width: 100%; padding: 8px; font-size: 13px; margin-bottom: 8px;">
+                                📖 Читать рецепт
+                            </a>
+                        {% endif %}
+                    {% endwith %}
+
                     <a href="{% url 'remove_favorite' item.recipe.id %}" class="btn btn-danger" style="width: 100%; padding: 8px; font-size: 13px;">
                         ❌ Удалить
                     </a>

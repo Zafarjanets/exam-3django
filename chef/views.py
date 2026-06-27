@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from groq import Groq
-from .utils import detect_products
-from .models import AIRecipeRequest, Recipe, Favorite
+from .utils import detect_products, build_multi_dish_prompt, parse_ai_dishes
+from .models import AIRecipeRequest, Recipe, Favorite, AIDishSuggestion, Ingredient, RecipeIngredient
 
 # Initialize Groq Client
 client = Groq(api_key="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")
@@ -14,78 +14,80 @@ def home(request):
 
 # -----------------------------------------------------------------------------
 
+def _save_ai_dishes(user, ingredients_str, ai_text, ai_request=None):
+    dishes_data = parse_ai_dishes(ai_text)
+    dishes = []
+    for dish in dishes_data:
+        dishes.append(AIDishSuggestion.objects.create(
+            ai_request=ai_request,
+            user=user,
+            title=dish['title'],
+            summary=dish['summary'],
+            instructions=dish['instructions'],
+            ingredients_text=dish['ingredients_text'] or ingredients_str,
+            cooking_time=dish['cooking_time'],
+            difficulty=dish['difficulty'],
+        ))
+    return dishes
+
+
+def _call_ai_for_dishes(ingredients_str):
+    prompt = build_multi_dish_prompt(ingredients_str)
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
+
+
 @login_required
 def recipe_search(request):
-    result = None
+    dishes = None
+    ingredients_list = None
+    error = None
+
     if request.method == "POST":
-        ingredients = request.POST.get("ingredients")
+        ingredients = request.POST.get("ingredients", "").strip()
 
         if ingredients:
-            prompt = f"""
-Ты — СТРОГИЙ кулинарный AI.
+            try:
+                ai_text = _call_ai_for_dishes(ingredients)
+                ai_request = AIRecipeRequest.objects.create(
+                    user=request.user,
+                    ingredients_text=ingredients,
+                    detected_ingredients=ingredients,
+                    ai_response=ai_text,
+                )
+                dishes = _save_ai_dishes(
+                    request.user,
+                    ingredients,
+                    ai_text,
+                    ai_request=ai_request,
+                )
+                ingredients_list = [i.strip() for i in ingredients.split(",") if i.strip()]
+            except Exception as e:
+                error = f"Не удалось получить варианты блюд: {e}"
 
-❗ КРИТИЧЕСКИЕ ПРАВИЛА:
-- Используй ТОЛЬКО входные ингредиенты
-- НИКОГДА не добавляй новые продукты
-- НЕ исправляй слова пользователя (писать как есть)
-- НЕ добавляй “яйца, молоко, масло” если их нет во входе
-- НЕ улучшай текст пользователя
-
-ИНГРЕДИЕНТЫ (как есть):
-{ingredients}
-
-❗ ЗАДАЧА:
-Создай реальный рецепт только из этих продуктов.
-
-❗ ЕСЛИ МАЛО ПРОДУКТОВ:
-придумай простое блюдо, но используй только их
-
-ФОРМАТ:
-
-Название блюда:
-...
-
-Ингредиенты:
-(только входные, без изменений)
-
-Шаги:
-1.
-2.
-3.
-4.
-
-Время:
-Сложность:
-"""
-            response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            ai_text = response.choices[0].message.content
-
-            result = {
-                "ingredients": [i.strip() for i in ingredients.split(",")],
-                "recipe": ai_text
-            }
-
-    return render(request, "recipe_search.html", {"result": result})
+    return render(request, "recipe_search.html", {
+        "dishes": dishes,
+        "ingredients_list": ingredients_list,
+        "error": error,
+    })
 
 # ---------------------------------------------------------------------------------------------------
 
 @login_required
 def image_search(request):
+    dishes = None
     result = None
     error = None
+
     if request.method == "POST":
         image = request.FILES.get("image")
         if not image:
             error = "Пожалуйста, выберите фото продуктов."
         else:
             try:
-                # 1. Create request record in DB
                 obj = AIRecipeRequest.objects.create(
                     user=request.user,
                     image=image,
@@ -93,7 +95,6 @@ def image_search(request):
                     ai_response=""
                 )
 
-                # 2. Run YOLO product detection
                 products = detect_products(obj.image.path)
 
                 if not products:
@@ -101,56 +102,76 @@ def image_search(request):
                     obj.delete()
                 else:
                     ingredients_str = ", ".join(products)
+                    ai_text = _call_ai_for_dishes(ingredients_str)
 
-                    # 3. Call Groq to generate recipe from detected ingredients
-                    prompt = f"""
-Ты — СТРОГИЙ кулинарный AI.
-
-❗ КРИТИЧЕСКИЕ ПРАВИЛА:
-- Используй ТОЛЬКО входные ингредиенты
-- НИКОГДА не добавляй новые продукты
-- НЕ исправляй слова пользователя (писать как есть)
-- НЕ добавляй “яйца, молоко, масло” если их нет во входе
-- НЕ улучшай текст пользователя
-
-ИНГРЕДИЕНТЫ (обнаруженные на фото):
-{ingredients_str}
-
-❗ ЗАДАЧА:
-Создай реальный рецепт только из этих продуктов.
-
-ФОРМАТ:
-Название блюда:
-...
-
-Ингредиенты:
-...
-
-Шаги:
-1.
-...
-
-Время:
-Сложность:
-"""
-                    response = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
-                        messages=[
-                            {"role": "user", "content": prompt}
-                        ]
-                    )
-                    ai_text = response.choices[0].message.content
-
-                    # 4. Save results to DB
                     obj.detected_ingredients = ingredients_str
                     obj.ai_response = ai_text
                     obj.save()
 
+                    dishes = _save_ai_dishes(
+                        request.user,
+                        ingredients_str,
+                        ai_text,
+                        ai_request=obj,
+                    )
                     result = obj
             except Exception as e:
                 error = f"Произошла ошибка при анализе: {str(e)}"
 
-    return render(request, 'image_search.html', {'result': result, 'error': error})
+    return render(request, 'image_search.html', {
+        'result': result,
+        'dishes': dishes,
+        'error': error,
+    })
+
+# --------------------------------------------------------------------------------------------
+
+@login_required
+def ai_dish_detail(request, dish_id):
+    dish = get_object_or_404(
+        AIDishSuggestion.objects.select_related('ai_request', 'saved_recipe'),
+        id=dish_id,
+        user=request.user,
+    )
+    ingredients = [i.strip() for i in dish.ingredients_text.split(",") if i.strip()]
+
+    return render(request, 'ai_dish_detail.html', {
+        'dish': dish,
+        'ingredients': ingredients,
+        'video_links': dish.get_video_links(),
+    })
+
+
+@login_required
+def add_ai_favorite(request, dish_id):
+    dish = get_object_or_404(AIDishSuggestion, id=dish_id, user=request.user)
+
+    if dish.saved_recipe_id:
+        return redirect('favorites')
+
+    recipe = Recipe.objects.create(
+        title=dish.title,
+        description=dish.summary,
+        instructions=dish.instructions,
+        cooking_time=dish.cooking_time,
+        servings=2,
+        difficulty=dish.difficulty,
+        created_by=request.user,
+    )
+
+    for name in [i.strip() for i in dish.ingredients_text.split(",") if i.strip()]:
+        ingredient, _ = Ingredient.objects.get_or_create(name=name[:100])
+        RecipeIngredient.objects.create(
+            recipe=recipe,
+            ingredient=ingredient,
+            quantity="по вкусу",
+        )
+
+    Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+    dish.saved_recipe = recipe
+    dish.save(update_fields=['saved_recipe'])
+
+    return redirect('favorites')
 
 # --------------------------------------------------------------------------------------------
 
@@ -158,7 +179,7 @@ def image_search(request):
 def favorites(request):
     favorites = Favorite.objects.filter(
         user=request.user
-    ).select_related('recipe')
+    ).select_related('recipe').prefetch_related('recipe__ai_suggestions')
 
     return render(request, 'favorites.html', {
         'favorites': favorites
@@ -190,7 +211,7 @@ def remove_favorite(request, recipe_id):
 def history(request):
     items = AIRecipeRequest.objects.filter(
         user=request.user
-    ).order_by('-created_at')
+    ).prefetch_related('dishes').order_by('-created_at')
 
     return render(request, "history.html", {
         "items": items
@@ -200,7 +221,6 @@ def history(request):
 
 @login_required
 def profile(request):
-    # Retrieve some stats to display on profile
     history_count = AIRecipeRequest.objects.filter(user=request.user).count()
     favorites_count = Favorite.objects.filter(user=request.user).count()
     context = {

@@ -51,16 +51,37 @@
         </div>
         
         <div class="recipe-detail-info">
-            <div class="glass-panel" style="padding: 25px; border-radius: 16px; height: 100%; display: flex; flex-direction: column;">
+            <div class="glass-panel" style="padding: 25px; border-radius: 16px; height: 100%;">
                 <h3 style="font-size: 18px; margin-bottom: 10px;">🔍 Распознанные продукты:</h3>
                 <div id="badge-wrapper" class="recipe-badges" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
-                
-                <h3 style="font-size: 18px; margin-bottom: 10px;">🤖 Рецепт от AI:</h3>
-                <pre class="recipe-body" style="font-size: 14px; flex: 1; max-height: 300px; overflow-y: auto;">{{ result.ai_response }}</pre>
             </div>
         </div>
     </div>
 </div>
+
+{% if dishes %}
+<div style="margin-top: 40px;">
+    <h2 style="text-align: center; margin-bottom: 10px;">✨ ИИ предложил {{ dishes|length }} варианта</h2>
+    <p style="color: var(--text-secondary); text-align: center; margin-bottom: 30px;">
+        Нажмите на понравившееся блюдо — откроется полный рецепт с инструкцией
+    </p>
+
+    <div class="dish-options-grid">
+        {% for dish in dishes %}
+            <a href="{% url 'ai_dish_detail' dish.id %}" class="dish-option-card glass-panel">
+                <div class="dish-option-icon">🍲</div>
+                <h3>{{ dish.title }}</h3>
+                <p>{{ dish.summary }}</p>
+                <div class="recipe-badges" style="margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap;">
+                    <span class="badge">⏱️ {{ dish.cooking_time }} мин</span>
+                    <span class="badge badge-success">{{ dish.get_difficulty_display }}</span>
+                </div>
+                <span class="dish-option-link">Читать рецепт →</span>
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <script>
     // Dynamically build tags from comma separated list

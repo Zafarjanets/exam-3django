@@ -59,6 +59,46 @@ class AIRecipeRequest(models.Model):
     def __str__(self):
         return f'AI Request #{self.id}'
 
+
+class AIDishSuggestion(models.Model):
+    ai_request = models.ForeignKey(
+        AIRecipeRequest,
+        on_delete=models.CASCADE,
+        related_name='dishes',
+        null=True,
+        blank=True,
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    summary = models.TextField()
+    instructions = models.TextField()
+    ingredients_text = models.TextField(blank=True)
+    cooking_time = models.PositiveIntegerField(default=30)
+    difficulty = models.CharField(
+        max_length=10,
+        choices=Recipe.DIFFICULTY_CHOICES,
+        default='easy',
+    )
+    saved_recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ai_suggestions',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_favorited(self):
+        return self.saved_recipe_id is not None
+
+    def get_video_links(self):
+        from .utils import build_cooking_video_links
+        return build_cooking_video_links(self.title, self.ingredients_text)
+
 class Review(models.Model):
     user = models.ForeignKey( settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe,on_delete=models.CASCADE,related_name='reviews')

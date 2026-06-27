@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ dish.title }} | AI Recipe Assistant{% endblock %}
+
+{% block content %}
+<div class="dish-detail-header glass-panel" style="padding: 30px; border-radius: 16px; margin-bottom: 30px;">
+    <a href="javascript:history.back()" class="btn btn-secondary" style="margin-bottom: 20px; padding: 8px 16px; font-size: 13px;">
+        ← Назад к вариантам
+    </a>
+
+    <h2 style="margin-bottom: 10px;">🍽️ {{ dish.title }}</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 16px;">{{ dish.summary }}</p>
+
+    <div class="recipe-badges" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+        <span class="badge">⏱️ {{ dish.cooking_time }} мин</span>
+        <span class="badge badge-success">{{ dish.get_difficulty_display }}</span>
+        <span class="badge">🤖 AI рецепт</span>
+    </div>
+
+    {% if dish.is_favorited %}
+        <a href="{% url 'favorites' %}" class="btn btn-primary" style="width: 100%; max-width: 320px;">
+            ❤️ Уже в избранном — открыть
+        </a>
+    {% else %}
+        <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary" style="width: 100%; max-width: 320px;">
+            ❤️ Добавить в избранное
+        </a>
+    {% endif %}
+</div>
+
+<div class="recipe-detail-grid">
+    <div class="glass-panel" style="padding: 25px; border-radius: 16px;">
+        <h3 style="font-size: 18px; margin-bottom: 15px;">📦 Ингредиенты</h3>
+        <div class="recipe-badges" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+            {% for item in ingredients %}
+                <span class="badge badge-ingredients">{{ item }}</span>
+            {% empty %}
+                <pre class="recipe-body" style="font-size: 14px;">{{ dish.ingredients_text }}</pre>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="glass-panel" style="padding: 25px; border-radius: 16px;">
+        <h3 style="font-size: 18px; margin-bottom: 15px;">👨‍🍳 Как приготовить</h3>
+        <pre class="recipe-body" style="font-size: 15px;">{{ dish.instructions }}</pre>
+    </div>
+</div>
+{% endblock %}

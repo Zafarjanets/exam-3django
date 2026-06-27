@@ -6,8 +6,12 @@
 <div class="form-card glass-panel">
     <h2 style="text-align: center; margin-bottom: 10px;">✍️ Введите ингредиенты</h2>
     <p style="color: var(--text-secondary); text-align: center; margin-bottom: 30px;">
-        Введите список имеющихся у вас продуктов через запятую, и наш ИИ сгенерирует для вас пошаговый рецепт.
+        Введите список имеющихся у вас продуктов через запятую — ИИ предложит несколько вариантов блюд на выбор.
     </p>
+
+    {% if error %}
+        <div class="alert alert-danger" style="margin-bottom: 20px;">{{ error }}</div>
+    {% endif %}
 
     <form method="POST" id="search-form">
         {% csrf_token %}
@@ -18,32 +22,40 @@
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-btn">
-            <span>🍳 Получить рецепт</span>
+            <span>🍳 Получить варианты блюд</span>
         </button>
     </form>
 </div>
 
-{% if result %}
-<div class="recipe-container glass-panel" style="margin-top: 40px; padding: 30px; border-radius: 16px;">
-    <div class="recipe-result-header">
-        <div>
-            <h2>✨ AI Рецепт блюда</h2>
-            <div class="recipe-badges">
-                <span class="badge badge-success">✓ Готово</span>
-                <span class="badge">Llama 3.1 AI</span>
-            </div>
-        </div>
-    </div>
+{% if dishes %}
+<div style="margin-top: 40px;">
+    <h2 style="text-align: center; margin-bottom: 10px;">✨ ИИ предложил {{ dishes|length }} варианта</h2>
+    <p style="color: var(--text-secondary); text-align: center; margin-bottom: 30px;">
+        Выберите понравившееся блюдо, чтобы прочитать полный рецепт и добавить в избранное
+    </p>
 
-    <h3 style="font-size: 18px; margin-bottom: 10px;">📦 Использованные продукты:</h3>
-    <div class="recipe-badges" style="margin-bottom: 25px; display: flex; gap: 8px; flex-wrap: wrap;">
-        {% for item in result.ingredients %}
+    {% if ingredients_list %}
+    <div class="recipe-badges" style="margin-bottom: 25px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+        {% for item in ingredients_list %}
             <span class="badge badge-ingredients">{{ item }}</span>
         {% endfor %}
     </div>
+    {% endif %}
 
-    <h3 style="font-size: 18px; margin-bottom: 10px;">📖 Рецепт и шаги приготовления:</h3>
-    <pre class="recipe-body">{{ result.recipe }}</pre>
+    <div class="dish-options-grid">
+        {% for dish in dishes %}
+            <a href="{% url 'ai_dish_detail' dish.id %}" class="dish-option-card glass-panel">
+                <div class="dish-option-icon">🍲</div>
+                <h3>{{ dish.title }}</h3>
+                <p>{{ dish.summary }}</p>
+                <div class="recipe-badges" style="margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap;">
+                    <span class="badge">⏱️ {{ dish.cooking_time }} мин</span>
+                    <span class="badge badge-success">{{ dish.get_difficulty_display }}</span>
+                </div>
+                <span class="dish-option-link">Читать рецепт →</span>
+            </a>
+        {% endfor %}
+    </div>
 </div>
 {% endif %}
 
@@ -55,7 +67,7 @@
     if (form && btn) {
         form.addEventListener('submit', () => {
             btn.disabled = true;
-            btn.innerHTML = '⌛ Нейросеть готовит рецепт... Секунду';
+            btn.innerHTML = '⌛ ИИ подбирает варианты блюд...';
             btn.style.opacity = '0.8';
         });
     }
