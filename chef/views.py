@@ -98,7 +98,6 @@ def image_search(request):
     dishes = None
     result = None
     error = None
-
     if request.method == "POST":
         image = request.FILES.get("image")
         if not image:
