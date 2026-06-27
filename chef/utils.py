@@ -114,7 +114,7 @@ def build_cooking_video_links(title, ingredients_text=''):
 
     return links
 
-
+ 
 def detect_products(image_path):
     model = _get_yolo_model()
     results = model(image_path)
