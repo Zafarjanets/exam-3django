@@ -20,7 +20,6 @@ def serialize_dish_card(dish):
         'accent': DISH_ACCENTS[dish.id % len(DISH_ACCENTS)],
     }
 
-# Initialize Groq Client
 client = Groq(api_key="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")
 
 # ----------------------------------------------------------------------
@@ -195,11 +194,7 @@ def add_ai_favorite(request, dish_id):
 
     for name in [i.strip() for i in dish.ingredients_text.split(",") if i.strip()]:
         ingredient, _ = Ingredient.objects.get_or_create(name=name[:100])
-        RecipeIngredient.objects.create(
-            recipe=recipe,
-            ingredient=ingredient,
-            quantity="по вкусу",
-        )
+        RecipeIngredient.objects.create(recipe=recipe,ingredient=ingredient,quantity="по вкусу",)
 
     Favorite.objects.get_or_create(user=request.user, recipe=recipe)
     dish.saved_recipe = recipe
@@ -214,29 +209,19 @@ def favorites(request):
     favorites = Favorite.objects.filter(
         user=request.user
     ).select_related('recipe').prefetch_related('recipe__ai_suggestions')
-
-    return render(request, 'favorites.html', {
-        'favorites': favorites
-    })
+    
+    return render(request, 'favorites.html', {'favorites': favorites})
 
 @login_required
 def add_favorite(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id)
 
-    Favorite.objects.get_or_create(
-        user=request.user,
-        recipe=recipe
-    )
-
+    Favorite.objects.get_or_create(user=request.user,recipe=recipe)
     return redirect('favorites')
 
 @login_required
 def remove_favorite(request, recipe_id):
-    Favorite.objects.filter(
-        user=request.user,
-        recipe_id=recipe_id
-    ).delete()
-
+    Favorite.objects.filter(user=request.user,recipe_id=recipe_id).delete()
     return redirect('favorites')
 
 # --------------------------------------------------------------------

@@ -70,17 +70,13 @@ def confirm_email(request):
         user = User.objects.filter(email=email).first()
         if not user:
             return render(request, "accounts/confirm.html", {"error": "Email not found."})
-
         confirm = EmailConfirm.objects.filter(user=user, code=code).first()
         if not confirm:
             return render(request, "accounts/confirm.html", {"email": email, "error": "Invalid confirmation code."})
-
         user.is_active = True
         user.save()
-
         login(request, user, backend='register.backends.EmailOrUsernameBackend')
         return redirect("home")
-
     email = request.session.get('confirm_email', '')
     return render(request, "accounts/confirm.html", {"email": email})
 
