@@ -17,16 +17,41 @@
         <span class="badge">🤖 AI рецепт</span>
     </div>
 
-    {% if dish.is_favorited %}
-        <a href="{% url 'favorites' %}" class="btn btn-primary" style="width: 100%; max-width: 320px;">
-            ❤️ Уже в избранном — открыть
-        </a>
-    {% else %}
-        <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary" style="width: 100%; max-width: 320px;">
-            ❤️ Добавить в избранное
-        </a>
-    {% endif %}
+    <div class="dish-detail-actions" style="display: flex; flex-wrap: wrap; gap: 12px;">
+        {% if dish.is_favorited %}
+            <a href="{% url 'favorites' %}" class="btn btn-primary" style="flex: 1; min-width: 220px;">
+                ❤️ Уже в избранном — открыть
+            </a>
+        {% else %}
+            <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary" style="flex: 1; min-width: 220px;">
+                ❤️ Добавить в избранное
+            </a>
+        {% endif %}
+
+        {% if video_links %}
+            <a href="{{ video_links.0.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-video" style="flex: 1; min-width: 220px;">
+                🎬 Смотреть видео приготовления
+            </a>
+        {% endif %}
+    </div>
 </div>
+
+{% if video_links %}
+<div class="glass-panel video-links-panel" style="padding: 25px; border-radius: 16px; margin-bottom: 30px;">
+    <h3 style="font-size: 18px; margin-bottom: 8px;">📺 Видео по этому блюду и вашим продуктам</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 18px; font-size: 14px;">
+        Подборка ссылок на YouTube — рецепты по названию блюда и по вашим ингредиентам
+    </p>
+    <div class="video-links-list">
+        {% for link in video_links %}
+            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="video-link-item">
+                <span class="video-link-icon">▶</span>
+                <span>{{ link.label }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <div class="recipe-detail-grid">
     <div class="glass-panel" style="padding: 25px; border-radius: 16px;">
