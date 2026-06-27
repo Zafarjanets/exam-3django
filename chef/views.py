@@ -5,7 +5,7 @@ from .utils import detect_products, build_multi_dish_prompt, parse_ai_dishes
 from .models import AIRecipeRequest, Recipe, Favorite, AIDishSuggestion, Ingredient, RecipeIngredient
 
 DISH_ICONS = ['🍲', '🥘', '🍳', '🥗', '🌮', '🍕', '🥙']
-DISH_ACCENTS = ['#ff6b35', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#ef4444']
+DISH_ACCENTS = ['#ff6b35', '#8b5cf6', '#10b981', '#f59e0b', "#ea2587", '#06b6d4', '#ef4444']
 
 
 def serialize_dish_card(dish):
