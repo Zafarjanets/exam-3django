@@ -26,3 +26,40 @@
         </button>
     </form>
 </div>
+ 
+{% if dishes %}
+<section class="results-section reveal">
+    <div class="section-header centered">
+        <span class="section-icon sparkle">✨</span>
+        <div>
+            <h2>ИИ предложил {{ dishes|length }} варианта</h2>
+            <p>Выберите блюдо — откроется рецепт, видео и избранное</p>
+        </div>
+    </div>
+ 
+    {% if ingredients_json %}
+    <div id="search-ingredients" class="recipe-badges centered-badges"></div>
+    {{ ingredients_json|json_script:"search-ingredients-json" }}
+    {% endif %}
+ 
+    <div id="dishes-grid" class="dish-options-grid"></div>
+    {{ dishes_json|json_script:"dishes-json" }}
+</section>
+{% endif %}
+{% endblock %}
+ 
+{% block extra_js %}
+<script>
+(function () {
+    function readJSON(id) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        try { return JSON.parse(el.textContent); }
+        catch (e) { console.error("Ошибка JSON #" + id, e); return null; }
+    }
+ 
+    function escapeHTML(str) {
+        const div = document.createElement("div");
+        div.textContent = String(str);
+        return div.innerHTML;
+    }
