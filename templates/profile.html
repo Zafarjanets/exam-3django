@@ -1,36 +1,13 @@
 {% extends 'base.html' %}
-
+ 
 {% block title %}Профиль | AI Recipe Assistant{% endblock %}
-
+ 
 {% block content %}
 <div class="profile-card glass-panel reveal">
     <div class="profile-avatar">
         <span class="icon-bounce">🍳</span>
         <span class="profile-avatar-ring"></span>
     </div>
-
-    <div class="profile-username gradient-title" style="font-size: 28px;">{{ user.username }}</div>
-    <div class="profile-email">📧 {{ user.email }}</div>
-
-    <div class="profile-stats">
-        <div class="stat-item">
-            <div class="stat-value" data-count="{{ favorites_count }}">0</div>
-            <div class="stat-label">❤️ Избранное</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value" data-count="{{ history_count }}">0</div>
-            <div class="stat-label">📜 Запросы</div>
-        </div>
-    </div>
-
-    <div class="profile-actions">
-        <a href="{% url 'favorites' %}" class="btn btn-primary btn-glow">⭐ В избранное</a>
-        <a href="{% url 'history' %}" class="btn btn-outline">📜 История</a>
-        <a href="{% url 'logout' %}" class="btn btn-danger">🚪 Выйти</a>
-    </div>
-</div>
-
-<script>
-    document.getElementById('nav-profile').classList.add('active');
-</script>
+ 
+  
 {% endblock %}
