@@ -21,3 +21,26 @@
                     <div>
                         <h3 class="fav-title">{{ item.recipe.title }}</h3>
                         <p class="fav-description">{{ item.recipe.description }}</p>
+ 
+                        <div class="recipe-badges fav-badges-row">
+                            <span class="badge">⏱️ {{ item.recipe.cooking_time }} мин</span>
+                            <span class="badge">👥 {{ item.recipe.servings }} порц.</span>
+                            <span class="badge badge-success">{{ item.recipe.get_difficulty_display }}</span>
+                        </div>
+                    </div>
+ 
+                    {% with ai_dish=item.recipe.ai_suggestions.first %}
+                        {% if ai_dish %}
+                            <a href="{% url 'ai_dish_detail' ai_dish.id %}" class="btn btn-primary fav-read-btn">
+                                📖 Читать рецепт
+                            </a>
+                        {% endif %}
+                    {% endwith %}
+ 
+                    <a href="{% url 'remove_favorite' item.recipe.id %}" class="btn btn-danger fav-remove-btn">
+                        ❌ Удалить
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
