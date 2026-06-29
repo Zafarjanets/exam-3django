@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-
+ 
 {% block title %}История запросов | AI Recipe Assistant{% endblock %}
-
+ 
 {% block content %}
-<h2 style="margin-bottom: 30px; text-align: center;">📜 История ваших AI запросов</h2>
-
+<h2 class="history-page-title">📜 История ваших AI запросов</h2>
+ 
 {% if items %}
     <div class="history-timeline">
         {% for item in items %}
@@ -13,24 +13,22 @@
                     {% if item.image %}
                         <img src="{{ item.image.url }}" alt="Запрос от {{ item.created_at }}">
                     {% else %}
-                        <div style="width: 100%; height: 100%; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 32px;">
-                            📝
-                        </div>
+                        <div class="history-empty-icon-fallback">📝</div>
                     {% endif %}
                 </div>
-                
+ 
                 <div class="history-details">
                     <div class="history-meta">
                         📅 <b>Дата запроса:</b> {{ item.created_at|date:"d E Y H:i" }}
                     </div>
-                    
-                    <div style="margin: 8px 0 12px;">
-                        <h4 style="font-size: 15px; margin-bottom: 6px; color: var(--accent-orange);">🔍 Ингредиенты:</h4>
-                        <div class="recipe-badges history-badges-list" data-ingredients="{{ item.detected_ingredients|default:item.ingredients_text }}" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+ 
+                    <div class="history-ingredients-block">
+                        <h4 class="history-ingredients-title">🔍 Ингредиенты:</h4>
+                        <div class="recipe-badges history-badges-list" data-ingredients="{{ item.detected_ingredients|default:item.ingredients_text }}"></div>
                     </div>
-                    
+ 
                     {% if item.dishes.all %}
-                        <h4 style="font-size: 15px; margin-bottom: 10px;">🍽️ Варианты блюд:</h4>
+                        <h4 class="history-dishes-title">🍽️ Варианты блюд:</h4>
                         <div class="history-dish-links">
                             {% for dish in item.dishes.all %}
                                 <a href="{% url 'ai_dish_detail' dish.id %}" class="history-dish-link">
@@ -39,46 +37,23 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <pre class="recipe-body" style="font-size: 13px; max-height: 200px; overflow-y: auto; padding: 15px;">{{ item.ai_response }}</pre>
+                        <pre class="recipe-body history-ai-response">{{ item.ai_response }}</pre>
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
     </div>
-
-    <script>
-        document.querySelectorAll('.history-badges-list').forEach(wrapper => {
-            const raw = wrapper.getAttribute('data-ingredients');
-            if (raw) {
-                raw.split(',').forEach(item => {
-                    const clean = item.trim();
-                    if (clean) {
-                        const span = document.createElement('span');
-                        span.className = 'badge badge-ingredients';
-                        span.style.fontSize = '11px';
-                        span.style.padding = '4px 8px';
-                        span.textContent = clean;
-                        wrapper.appendChild(span);
-                    }
-                });
-            }
-        });
-    </script>
 {% else %}
-    <div class="glass-panel" style="text-align: center; padding: 45px; border-radius: 16px; max-width: 500px; margin: 40px auto;">
-        <span style="font-size: 48px; display: block; margin-bottom: 15px;">📜</span>
+    <div class="glass-panel empty-state-panel">
+        <span class="empty-state-icon">📜</span>
         <h3>История пуста</h3>
-        <p style="color: var(--text-secondary); margin-top: 10px; margin-bottom: 25px; font-size: 15px;">
+        <p class="empty-state-text">
             Вы ещё не искали рецепты по ингредиентам или фото.
         </p>
-        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <div class="empty-state-actions">
             <a href="{% url 'recipe_search' %}" class="btn btn-primary">Поиск по тексту</a>
             <a href="{% url 'image_search' %}" class="btn btn-secondary">Загрузить фото</a>
         </div>
     </div>
 {% endif %}
-
-<script>
-    document.getElementById('nav-history').classList.add('active');
-</script>
 {% endblock %}

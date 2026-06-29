@@ -1,258 +1,227 @@
-/**
- * Zaf Chef — UI animations & JSON-driven components
- */
+/* ==========================================================================
+   ZAF CHEF — app.js
+   Renders dynamic content from {{ x|json_script:"..." }} blocks.
+   ========================================================================== */
+
 (function () {
-    'use strict';
+  "use strict";
 
-    const FOOD_ICONS = ['🍳', '🥘', '🍲', '🥗', '🍕', '🌮', '🥙', '🍜', '🧀', '🥚'];
-
-    function readJson(id) {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        try {
-            return JSON.parse(el.textContent);
-        } catch {
-            return null;
-        }
+  function readJSON(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    try {
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      console.error("Не удалось разобрать JSON для #" + id, e);
+      return null;
     }
+  }
 
-    /* ── Floating background orbs ── */
-    function initOrbs() {
-        const wrap = document.querySelector('.bg-orbs');
-        if (!wrap) return;
-        wrap.querySelectorAll('.orb').forEach((orb, i) => {
-            orb.style.animationDelay = `${i * 1.4}s`;
-        });
-    }
+  function el(tag, className, html) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (html !== undefined) node.innerHTML = html;
+    return node;
+  }
 
-    /* ── Floating food emojis ── */
-    function initFloatingIcons() {
-        const container = document.getElementById('floating-icons');
-        if (!container) return;
-
-        for (let i = 0; i < 14; i++) {
-            const span = document.createElement('span');
-            span.className = 'float-icon';
-            span.textContent = FOOD_ICONS[i % FOOD_ICONS.length];
-            span.style.left = `${Math.random() * 100}%`;
-            span.style.top = `${Math.random() * 100}%`;
-            span.style.animationDuration = `${12 + Math.random() * 18}s`;
-            span.style.animationDelay = `${Math.random() * 8}s`;
-            span.style.fontSize = `${18 + Math.random() * 22}px`;
-            span.style.opacity = `${0.04 + Math.random() * 0.08}`;
-            container.appendChild(span);
-        }
-    }
-
-    /* ── Scroll reveal ── */
-    function initReveal() {
-        const els = document.querySelectorAll('.reveal, .dish-option-card, .dashboard-card, .fav-card, .history-card');
-        if (!els.length) return;
-
-        const io = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('revealed');
-                        io.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-        );
-
-        els.forEach((el, i) => {
-            el.style.setProperty('--reveal-delay', `${i * 0.08}s`);
-            io.observe(el);
-        });
-    }
-
-    /* ── Navbar scroll glow ── */
-    function initNavbar() {
-        const nav = document.querySelector('.navbar');
-        if (!nav) return;
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('navbar-scrolled', window.scrollY > 20);
-        }, { passive: true });
-    }
-
-    /* ── Animated icon wiggle on hover ── */
-    function initIconHover() {
-        document.querySelectorAll('.icon-bounce, .card-icon, .dish-option-icon').forEach((el) => {
-            el.addEventListener('mouseenter', () => el.classList.add('icon-wiggle'));
-            el.addEventListener('animationend', () => el.classList.remove('icon-wiggle'));
-        });
-    }
-
-    /* ── Dish cards from JSON ── */
-    function initDishGrid(jsonId, containerId) {
-        const data = readJson(jsonId);
-        const container = document.getElementById(containerId);
-        if (!data || !container) return;
-
-        container.innerHTML = '';
-
-        data.forEach((dish, index) => {
-            const card = document.createElement('a');
-            card.href = dish.url;
-            card.className = 'dish-option-card glass-panel reveal';
-            card.style.setProperty('--reveal-delay', `${index * 0.12}s`);
-            card.style.setProperty('--card-accent', dish.accent || '#ff6b35');
-
-            card.innerHTML = `
-                <div class="dish-card-glow"></div>
-                <div class="dish-option-icon icon-bounce">${dish.icon}</div>
-                <span class="dish-card-number">#${index + 1}</span>
-                <h3>${escapeHtml(dish.title)}</h3>
-                <p>${escapeHtml(dish.summary)}</p>
-                <div class="recipe-badges dish-card-badges">
-                    <span class="badge badge-animated"><span class="badge-icon">⏱️</span> ${dish.cooking_time} мин</span>
-                    <span class="badge badge-success badge-animated"><span class="badge-icon">✨</span> ${escapeHtml(dish.difficulty)}</span>
-                </div>
-                <span class="dish-option-link">
-                    <span>Читать рецепт</span>
-                    <span class="arrow-slide">→</span>
-                </span>
-            `;
-
-            container.appendChild(card);
-        });
-
-        initReveal();
-        initIconHover();
-    }
-
-    /* ── Ingredient badges from JSON ── */
-    function initIngredientBadges(jsonId, containerId) {
-        const items = readJson(jsonId);
-        const container = document.getElementById(containerId);
-        if (!items || !container) return;
-
-        container.innerHTML = '';
-        items.forEach((name, i) => {
-            const span = document.createElement('span');
-            span.className = 'badge badge-ingredients badge-animated ingredient-pop';
-            span.style.animationDelay = `${i * 0.07}s`;
-            span.innerHTML = `<span class="badge-icon">🥕</span> ${escapeHtml(name)}`;
-            container.appendChild(span);
-        });
-    }
-
-    /* ── Cooking steps from JSON text ── */
-    function initCookingSteps(jsonId, containerId) {
-        const data = readJson(jsonId);
-        const container = document.getElementById(containerId);
-        if (!data || !container) return;
-
-        const steps = parseSteps(data.instructions);
-        container.innerHTML = '';
-
-        steps.forEach((step, i) => {
-            const div = document.createElement('div');
-            div.className = 'cooking-step reveal';
-            div.style.setProperty('--reveal-delay', `${i * 0.1}s`);
-            div.innerHTML = `
-                <div class="step-number">${i + 1}</div>
-                <div class="step-content">${escapeHtml(step)}</div>
-            `;
-            container.appendChild(div);
-        });
-
-        initReveal();
-    }
-
-    function parseSteps(text) {
-        if (!text) return [];
-        const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-        const numbered = lines.filter((l) => /^\d+[\.\)]\s*/.test(l));
-        if (numbered.length >= 2) {
-            return numbered.map((l) => l.replace(/^\d+[\.\)]\s*/, ''));
-        }
-        if (lines.length >= 2) return lines;
-        return text.split(/(?<=[.!?])\s+/).filter((s) => s.length > 10);
-    }
-
-    /* ── Video links from JSON ── */
-    function initVideoLinks(jsonId, listId, mainBtnId) {
-        const links = readJson(jsonId);
-        const list = document.getElementById(listId);
-        if (!links || !list) return;
-
-        list.innerHTML = '';
-        links.forEach((link, i) => {
-            const a = document.createElement('a');
-            a.href = link.url;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.className = 'video-link-item reveal';
-            a.style.setProperty('--reveal-delay', `${i * 0.1}s`);
-            a.innerHTML = `
-                <span class="video-link-icon pulse-play">▶</span>
-                <span class="video-link-text">${escapeHtml(link.label)}</span>
-                <span class="video-link-arrow">↗</span>
-            `;
-            list.appendChild(a);
-        });
-
-        if (mainBtnId && links[0]) {
-            const btn = document.getElementById(mainBtnId);
-            if (btn) btn.href = links[0].url;
-        }
-
-        initReveal();
-    }
-
-    /* ── Counter animation for stats ── */
-    function initCounters() {
-        document.querySelectorAll('[data-count]').forEach((el) => {
-            const target = parseInt(el.dataset.count, 10);
-            if (isNaN(target)) return;
-            let current = 0;
-            const step = Math.max(1, Math.ceil(target / 30));
-            const timer = setInterval(() => {
-                current += step;
-                if (current >= target) {
-                    current = target;
-                    clearInterval(timer);
-                }
-                el.textContent = current;
-            }, 30);
-        });
-    }
-
-    /* ── Loader pulse rings ── */
-    function initLoader() {
-        const loader = document.querySelector('.loader-rings');
-        if (!loader) return;
-        for (let i = 0; i < 3; i++) {
-            const ring = document.createElement('div');
-            ring.className = 'loader-ring';
-            ring.style.animationDelay = `${i * 0.5}s`;
-            loader.appendChild(ring);
-        }
-    }
-
-    function escapeHtml(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
-
-    /* ── Boot ── */
-    document.addEventListener('DOMContentLoaded', () => {
-        initOrbs();
-        initFloatingIcons();
-        initNavbar();
-        initIconHover();
-        initReveal();
-        initCounters();
-        initLoader();
-
-        initDishGrid('dishes-json', 'dishes-grid');
-        initIngredientBadges('ingredients-json', 'ingredients-badges');
-        initCookingSteps('dish-detail-json', 'cooking-steps');
-        initVideoLinks('video-links-json', 'video-links-list', 'main-video-btn');
-
-        initIngredientBadges('detected-ingredients-json', 'badge-wrapper');
+  /* ---------- generic ingredient badge renderer ---------- */
+  function renderIngredientBadges(container, list) {
+    if (!container || !Array.isArray(list)) return;
+    container.innerHTML = "";
+    list.forEach((name, i) => {
+      const span = el(
+        "span",
+        "badge badge-ingredients ingredient-pop",
+        `<span class="badge-icon">•</span> ${escapeHTML(name)}`
+      );
+      span.style.animationDelay = `${i * 0.04}s`;
+      container.appendChild(span);
     });
+  }
+
+  function escapeHTML(str) {
+    const div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  /* ---------- dish detail page: ai_dish_detail.html ---------- */
+  function renderIngredientsPanel() {
+    const data = readJSON("ingredients-json");
+    const container = document.getElementById("ingredients-badges");
+    if (!data || !container) return;
+    renderIngredientBadges(container, data);
+  }
+
+  function renderCookingSteps() {
+    const data = readJSON("dish-detail-json");
+    const container = document.getElementById("cooking-steps");
+    if (!data || !container) return;
+
+    // Accept either { steps: [...] } or a raw array of step strings.
+    const steps = Array.isArray(data) ? data : data.steps || [];
+    container.innerHTML = "";
+
+    if (!steps.length) {
+      container.appendChild(
+        el("p", null, "Шаги приготовления не найдены.")
+      );
+      return;
+    }
+
+    steps.forEach((step, i) => {
+      const text = typeof step === "string" ? step : step.text || step.description || "";
+      const row = el("div", "cooking-step");
+      row.appendChild(el("div", "cooking-step-num", String(i + 1)));
+      row.appendChild(el("div", "cooking-step-text", escapeHTML(text)));
+      container.appendChild(row);
+    });
+  }
+
+  function renderVideoLinks() {
+    const data = readJSON("video-links-json");
+    const container = document.getElementById("video-links-list");
+    if (!data || !container) return;
+
+    container.innerHTML = "";
+    data.forEach((item) => {
+      const url = typeof item === "string" ? item : item.url;
+      const title = typeof item === "string" ? item : item.title || url;
+      if (!url) return;
+
+      const a = el(
+        "a",
+        "video-link-item",
+        `<span class="video-link-play">▶</span><span class="video-link-title">${escapeHTML(
+          title
+        )}</span>`
+      );
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      container.appendChild(a);
+    });
+  }
+
+  /* ---------- dish option cards (recipe_search / image_search results) ---------- */
+  function renderDishCards() {
+    const data = readJSON("dishes-json");
+    const container = document.getElementById("dishes-grid");
+    if (!data || !container) return;
+
+    container.innerHTML = "";
+    data.forEach((dish) => {
+      const url = dish.url || dish.detail_url || (dish.id ? `/dish/${dish.id}/` : "#");
+      const card = el(
+        "a",
+        "dish-option-card",
+        `<div class="dish-option-title">${escapeHTML(dish.title || "Без названия")}</div>
+         <div class="dish-option-summary">${escapeHTML(dish.summary || dish.description || "")}</div>
+         <div class="recipe-badges">
+           ${dish.cooking_time ? `<span class="badge"><span class="badge-icon">⏱</span> ${escapeHTML(dish.cooking_time)} мин</span>` : ""}
+           ${dish.difficulty ? `<span class="badge badge-success">${escapeHTML(dish.difficulty)}</span>` : ""}
+         </div>`
+      );
+      card.href = url;
+      container.appendChild(card);
+    });
+  }
+
+  /* ---------- image_search.html: detected ingredients ---------- */
+  function renderDetectedIngredients() {
+    const data = readJSON("detected-ingredients-json");
+    const container = document.getElementById("badge-wrapper");
+    if (!data || !container) return;
+    renderIngredientBadges(container, data);
+  }
+
+  /* ---------- recipe_search.html: ingredients used in search ---------- */
+  function renderSearchIngredients() {
+    const data = readJSON("search-ingredients-json");
+    const container = document.getElementById("search-ingredients");
+    if (!data || !container) return;
+    renderIngredientBadges(container, data);
+  }
+
+  /* ---------- history.html: ingredient badges per request ---------- */
+  function renderHistoryBadges() {
+    document.querySelectorAll(".history-badges-list").forEach((container) => {
+      const raw = container.dataset.ingredients;
+      if (!raw) return;
+      let list;
+      try {
+        list = JSON.parse(raw);
+      } catch (e) {
+        // Fallback: plain comma-separated text.
+        list = raw.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+      renderIngredientBadges(container, list);
+    });
+  }
+
+  /* ---------- profile.html: animated stat counters ---------- */
+  function renderStatCounters() {
+    document.querySelectorAll(".stat-value[data-count]").forEach((node) => {
+      const target = parseInt(node.dataset.count, 10) || 0;
+      const duration = 700;
+      const start = performance.now();
+
+      function tick(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        node.textContent = Math.round(eased * target);
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  /* ---------- image_search.html: upload UX ---------- */
+  function wireImageUpload() {
+    const input = document.getElementById("image-input");
+    const fileName = document.getElementById("file-name");
+    const form = document.getElementById("image-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const loader = document.getElementById("loader-overlay");
+
+    if (input && fileName) {
+      input.addEventListener("change", () => {
+        fileName.textContent = input.files.length
+          ? input.files[0].name
+          : "JPG, PNG, WEBP";
+      });
+    }
+
+    if (form && submitBtn) {
+      form.addEventListener("submit", () => {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML =
+          '<span class="btn-loading"><span class="spin-icon">⟳</span> Анализ изображения...</span>';
+        if (loader) loader.classList.remove("hidden");
+      });
+    }
+  }
+
+  /* ---------- video button: point "Смотреть видео" at first rendered link ---------- */
+  function wireMainVideoButton() {
+    const btn = document.getElementById("main-video-btn");
+    const data = readJSON("video-links-json");
+    if (btn && data && data.length) {
+      const first = data[0];
+      btn.href = typeof first === "string" ? first : first.url;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderIngredientsPanel();
+    renderCookingSteps();
+    renderVideoLinks();
+    renderDishCards();
+    renderDetectedIngredients();
+    renderSearchIngredients();
+    renderHistoryBadges();
+    renderStatCounters();
+    wireImageUpload();
+    wireMainVideoButton();
+  });
 })();

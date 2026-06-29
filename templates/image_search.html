@@ -1,44 +1,44 @@
 {% extends 'base.html' %}
-
+ 
 {% block title %}Распознавание по фото | AI Recipe Assistant{% endblock %}
-
+ 
 {% block content %}
 <section class="page-hero reveal">
     <span class="page-hero-icon icon-bounce">📸</span>
     <h1 class="gradient-title">Анализ по фото</h1>
     <p>YOLO распознает продукты — AI предложит варианты блюд</p>
 </section>
-
+ 
 <div class="form-card glass-panel reveal">
     {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
-
+ 
     <form method="POST" enctype="multipart/form-data" id="image-form">
         {% csrf_token %}
-        <div class="form-group" style="text-align: center;">
+        <div class="form-group image-form-center">
             <label for="image-input" class="upload-dropzone" id="dropzone">
                 <div class="upload-icon icon-bounce">📸</div>
                 <h4>Выберите файл изображения</h4>
                 <p id="file-name">JPG, PNG, WEBP</p>
-                <input type="file" id="image-input" name="image" accept="image/*" style="display: none;" required>
+                <input type="file" id="image-input" name="image" accept="image/*" class="visually-hidden-input" required>
             </label>
         </div>
-        <button type="submit" class="btn btn-secondary btn-glow" style="width: 100%;" id="submit-btn">
+        <button type="submit" class="btn btn-secondary btn-glow full-width-btn" id="submit-btn">
             <span class="btn-icon">🚀</span> Запустить анализ
         </button>
     </form>
 </div>
-
-<div id="loader-overlay" class="loader-overlay glass-panel" style="display: none;">
+ 
+<div id="loader-overlay" class="loader-overlay glass-panel hidden">
     <div class="loader-rings"></div>
     <div class="loader-icon spin-icon">🔬</div>
     <h3>Нейросеть анализирует фото...</h3>
     <p>YOLO + Groq AI — подождите немного</p>
 </div>
-
+ 
 {% if result %}
-<section class="reveal" style="margin-top: 40px;">
+<section class="reveal results-margin-top">
     <div class="recipe-detail-grid">
         <div class="glass-panel image-preview-panel">
             <div class="panel-header">
@@ -59,7 +59,7 @@
         </div>
     </div>
 </section>
-
+ 
 {% if dishes %}
 <section class="results-section reveal">
     <div class="section-header centered">
@@ -74,34 +74,4 @@
 </section>
 {% endif %}
 {% endif %}
-
-<script>
-    document.getElementById('nav-image').classList.add('active');
-
-    const fileInput = document.getElementById('image-input');
-    const fileName = document.getElementById('file-name');
-    const dropzone = document.getElementById('dropzone');
-
-    if (fileInput && fileName) {
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                fileName.textContent = `Выбран: ${e.target.files[0].name}`;
-                dropzone.classList.add('dropzone-active');
-            }
-        });
-    }
-
-    const form = document.getElementById('image-form');
-    const btn = document.getElementById('submit-btn');
-    const loader = document.getElementById('loader-overlay');
-
-    if (form && btn && loader) {
-        form.addEventListener('submit', () => {
-            btn.disabled = true;
-            form.classList.add('form-loading');
-            loader.style.display = 'flex';
-            loader.scrollIntoView({ behavior: 'smooth' });
-        });
-    }
-</script>
 {% endblock %}
