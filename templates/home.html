@@ -35,3 +35,10 @@
     </div>
 </div>
 {% endblock %}
+ 
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const link = document.getElementById("nav-home");
+        if (link) link.classList.add("active");
+    });
