@@ -30,3 +30,49 @@
     </form>
 </div>
  
+<div id="loader-overlay" class="loader-overlay glass-panel hidden">
+    <div class="loader-rings"></div>
+    <div class="loader-icon spin-icon">🔬</div>
+    <h3>Нейросеть анализирует фото...</h3>
+    <p>YOLO + Groq AI — подождите немного</p>
+</div>
+ 
+{% if result %}
+<section class="reveal results-margin-top">
+    <div class="recipe-detail-grid">
+        <div class="glass-panel image-preview-panel">
+            <div class="panel-header">
+                <span class="panel-icon icon-bounce">🖼️</span>
+                <h3>Ваше фото</h3>
+            </div>
+            <img src="{{ result.image.url }}" alt="Загруженное фото" class="preview-image">
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">
+                <span class="panel-icon icon-bounce">🔍</span>
+                <h3>Распознанные продукты</h3>
+            </div>
+            <div id="badge-wrapper" class="recipe-badges ingredients-grid"></div>
+            {% if detected_ingredients_json %}
+                {{ detected_ingredients_json|json_script:"detected-ingredients-json" }}
+            {% endif %}
+        </div>
+    </div>
+</section>
+ 
+{% if dishes %}
+<section class="results-section reveal">
+    <div class="section-header centered">
+        <span class="section-icon sparkle">✨</span>
+        <div>
+            <h2>ИИ предложил {{ dishes|length }} варианта</h2>
+            <p>Нажмите на блюдо — рецепт, видео и избранное</p>
+        </div>
+    </div>
+    <div id="dishes-grid" class="dish-options-grid"></div>
+    {{ dishes_json|json_script:"dishes-json" }}
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}
+ 
