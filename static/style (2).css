@@ -68,7 +68,11 @@ body{
 .floating-icons{ display:none; }
 
 /* ---------- layout ---------- */
-
+.container{
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 28px 96px;
+}
 
 /* ---------- navbar ---------- */
 .navbar{
