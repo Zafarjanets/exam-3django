@@ -98,3 +98,23 @@
             container.appendChild(card);
         });
     }
+ 
+    document.addEventListener("DOMContentLoaded", () => {
+        const link = document.getElementById("nav-search");
+        if (link) link.classList.add("active");
+ 
+        renderSearchIngredients();
+        renderDishCards();
+ 
+        const form = document.getElementById("search-form");
+        const btn = document.getElementById("submit-btn");
+        if (form && btn) {
+            form.addEventListener("submit", () => {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="btn-loading"><span class="spin-icon">⌛</span> ИИ готовит варианты...</span>';
+            });
+        }
+    });
+})();
+</script>
+{% endblock %}
