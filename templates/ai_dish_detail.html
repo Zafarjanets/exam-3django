@@ -71,13 +71,3 @@
         {{ ingredients_json|json_script:"ingredients-json" }}
     </div>
  
-    <div class="glass-panel recipe-panel reveal">
-        <div class="panel-header">
-            <span class="panel-icon icon-bounce">👨‍🍳</span>
-            <h3>Как приготовить</h3>
-        </div>
-        <div id="cooking-steps" class="cooking-steps"></div>
-        {{ dish_detail_json|json_script:"dish-detail-json" }}
-    </div>
-</div>
-{% endblock %}
