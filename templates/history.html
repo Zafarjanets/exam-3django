@@ -67,4 +67,30 @@
         return div.innerHTML;
     }
  
+    function renderHistoryBadges() {
+        document.querySelectorAll(".history-badges-list").forEach((container) => {
+            const raw = container.dataset.ingredients;
+            if (!raw) return;
+            let list;
+            try { list = JSON.parse(raw); }
+            catch (e) { list = raw.split(",").map((s) => s.trim()).filter(Boolean); }
  
+            container.innerHTML = "";
+            list.forEach((name, i) => {
+                const span = document.createElement("span");
+                span.className = "badge badge-ingredients ingredient-pop";
+                span.style.animationDelay = `${i * 0.04}s`;
+                span.innerHTML = `<span class="badge-icon">•</span> ${escapeHTML(name)}`;
+                container.appendChild(span);
+            });
+        });
+    }
+ 
+    document.addEventListener("DOMContentLoaded", () => {
+        renderHistoryBadges();
+        const link = document.getElementById("nav-history");
+        if (link) link.classList.add("active");
+    });
+})();
+</script>
+{% endblock %}
