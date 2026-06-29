@@ -126,3 +126,35 @@
             container.appendChild(card);
         });
     }
+ 
+    function wireImageUpload() {
+        const input = document.getElementById("image-input");
+        const fileName = document.getElementById("file-name");
+        const form = document.getElementById("image-form");
+        const submitBtn = document.getElementById("submit-btn");
+        const loader = document.getElementById("loader-overlay");
+ 
+        if (input && fileName) {
+            input.addEventListener("change", () => {
+                fileName.textContent = input.files.length ? input.files[0].name : "JPG, PNG, WEBP";
+            });
+        }
+        if (form && submitBtn) {
+            form.addEventListener("submit", () => {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="btn-loading"><span class="spin-icon">⟳</span> Анализ изображения...</span>';
+                if (loader) loader.classList.remove("hidden");
+            });
+        }
+    }
+ 
+    document.addEventListener("DOMContentLoaded", () => {
+        renderDetectedIngredients();
+        renderDishCards();
+        wireImageUpload();
+        const link = document.getElementById("nav-image");
+        if (link) link.classList.add("active");
+    });
+})();
+</script>
+{% endblock %}
