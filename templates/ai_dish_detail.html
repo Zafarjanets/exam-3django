@@ -71,3 +71,100 @@
         {{ ingredients_json|json_script:"ingredients-json" }}
     </div>
  
+    <div class="glass-panel recipe-panel reveal">
+        <div class="panel-header">
+            <span class="panel-icon icon-bounce">👨‍🍳</span>
+            <h3>Как приготовить</h3>
+        </div>
+        <div id="cooking-steps" class="cooking-steps"></div>
+        {{ dish_detail_json|json_script:"dish-detail-json" }}
+    </div>
+</div>
+{% endblock %}
+ 
+{% block extra_js %}
+<script>
+(function () {
+    function readJSON(id) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        try { return JSON.parse(el.textContent); }
+        catch (e) { console.error("Ошибка JSON #" + id, e); return null; }
+    }
+ 
+    function escapeHTML(str) {
+        const div = document.createElement("div");
+        div.textContent = String(str);
+        return div.innerHTML;
+    }
+ 
+    function renderIngredients() {
+        const data = readJSON("ingredients-json");
+        const container = document.getElementById("ingredients-badges");
+        if (!data || !container) return;
+        container.innerHTML = "";
+        data.forEach((name, i) => {
+            const span = document.createElement("span");
+            span.className = "badge badge-ingredients ingredient-pop";
+            span.style.animationDelay = `${i * 0.04}s`;
+            span.innerHTML = `<span class="badge-icon">•</span> ${escapeHTML(name)}`;
+            container.appendChild(span);
+        });
+    }
+ 
+    function renderSteps() {
+        const data = readJSON("dish-detail-json");
+        const container = document.getElementById("cooking-steps");
+        if (!data || !container) return;
+        const steps = Array.isArray(data) ? data : data.steps || [];
+        container.innerHTML = "";
+        if (!steps.length) {
+            container.innerHTML = "<p>Шаги приготовления не найдены.</p>";
+            return;
+        }
+        steps.forEach((step, i) => {
+            const text = typeof step === "string" ? step : (step.text || step.description || "");
+            const row = document.createElement("div");
+            row.className = "cooking-step";
+            row.innerHTML = `<div class="cooking-step-num">${i + 1}</div><div class="cooking-step-text">${escapeHTML(text)}</div>`;
+            container.appendChild(row);
+        });
+    }
+ 
+    function renderVideos() {
+        const data = readJSON("video-links-json");
+        const container = document.getElementById("video-links-list");
+        if (!data || !container) return;
+        container.innerHTML = "";
+        data.forEach((item) => {
+            const url = typeof item === "string" ? item : item.url;
+            const title = typeof item === "string" ? item : (item.title || url);
+            if (!url) return;
+            const a = document.createElement("a");
+            a.className = "video-link-item";
+            a.href = url;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.innerHTML = `<span class="video-link-play">▶</span><span class="video-link-title">${escapeHTML(title)}</span>`;
+            container.appendChild(a);
+        });
+    }
+ 
+    function wireMainVideoButton() {
+        const btn = document.getElementById("main-video-btn");
+        const data = readJSON("video-links-json");
+        if (btn && data && data.length) {
+            const first = data[0];
+            btn.href = typeof first === "string" ? first : first.url;
+        }
+    }
+ 
+    document.addEventListener("DOMContentLoaded", () => {
+        renderIngredients();
+        renderSteps();
+        renderVideos();
+        wireMainVideoButton();
+    });
+})();
+</script>
+{% endblock %}
