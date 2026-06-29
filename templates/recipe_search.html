@@ -63,3 +63,38 @@
         div.textContent = String(str);
         return div.innerHTML;
     }
+ 
+    function renderSearchIngredients() {
+        const data = readJSON("search-ingredients-json");
+        const container = document.getElementById("search-ingredients");
+        if (!data || !container) return;
+        container.innerHTML = "";
+        data.forEach((name, i) => {
+            const span = document.createElement("span");
+            span.className = "badge badge-ingredients ingredient-pop";
+            span.style.animationDelay = `${i * 0.06}s`;
+            span.innerHTML = `<span class="badge-icon">•</span> ${escapeHTML(name)}`;
+            container.appendChild(span);
+        });
+    }
+ 
+    function renderDishCards() {
+        const data = readJSON("dishes-json");
+        const container = document.getElementById("dishes-grid");
+        if (!data || !container) return;
+        container.innerHTML = "";
+        data.forEach((dish) => {
+            const url = dish.url || dish.detail_url || (dish.id ? `/dish/${dish.id}/` : "#");
+            const card = document.createElement("a");
+            card.className = "dish-option-card";
+            card.href = url;
+            card.innerHTML = `
+                <div class="dish-option-title">${escapeHTML(dish.title || "Без названия")}</div>
+                <div class="dish-option-summary">${escapeHTML(dish.summary || dish.description || "")}</div>
+                <div class="recipe-badges">
+                    ${dish.cooking_time ? `<span class="badge"><span class="badge-icon">⏱</span> ${escapeHTML(dish.cooking_time)} мин</span>` : ""}
+                    ${dish.difficulty ? `<span class="badge badge-success">${escapeHTML(dish.difficulty)}</span>` : ""}
+                </div>`;
+            container.appendChild(card);
+        });
+    }
