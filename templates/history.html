@@ -17,4 +17,54 @@
                     {% endif %}
                 </div>
  
-              
+                <div class="history-details">
+                    <div class="history-meta">
+                        📅 <b>Дата запроса:</b> {{ item.created_at|date:"d E Y H:i" }}
+                    </div>
+ 
+                    <div class="history-ingredients-block">
+                        <h4 class="history-ingredients-title">🔍 Ингредиенты:</h4>
+                        <div class="recipe-badges history-badges-list" data-ingredients="{{ item.detected_ingredients|default:item.ingredients_text }}"></div>
+                    </div>
+ 
+                    {% if item.dishes.all %}
+                        <h4 class="history-dishes-title">🍽️ Варианты блюд:</h4>
+                        <div class="history-dish-links">
+                            {% for dish in item.dishes.all %}
+                                <a href="{% url 'ai_dish_detail' dish.id %}" class="history-dish-link">
+                                    {{ dish.title }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <pre class="recipe-body history-ai-response">{{ item.ai_response }}</pre>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="glass-panel empty-state-panel">
+        <span class="empty-state-icon">📜</span>
+        <h3>История пуста</h3>
+        <p class="empty-state-text">
+            Вы ещё не искали рецепты по ингредиентам или фото.
+        </p>
+        <div class="empty-state-actions">
+            <a href="{% url 'recipe_search' %}" class="btn btn-primary">Поиск по тексту</a>
+            <a href="{% url 'image_search' %}" class="btn btn-secondary">Загрузить фото</a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+ 
+{% block extra_js %}
+<script>
+(function () {
+    function escapeHTML(str) {
+        const div = document.createElement("div");
+        div.textContent = String(str);
+        return div.innerHTML;
+    }
+ 
+ 
