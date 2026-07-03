@@ -6,7 +6,9 @@ from .models import (
     Favorite,
     AIRecipeRequest,
     AIDishSuggestion,
-    Review
+    Review,
+    WeeklyMealPlan,
+    DailyMeal
     )
 admin.site.register(Ingredient)
 admin.site.register(Recipe)
@@ -15,3 +17,5 @@ admin.site.register(Favorite)
 admin.site.register(AIRecipeRequest)
 admin.site.register(AIDishSuggestion)
 admin.site.register(Review)
+admin.site.register(WeeklyMealPlan)
+admin.site.register(DailyMeal)

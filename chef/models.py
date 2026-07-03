@@ -116,3 +116,61 @@ class Review(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.recipe.title}'
+
+
+class WeeklyMealPlan(models.Model):
+    GOAL_CHOICES = [
+        ('weight_loss', 'Weight Loss'),
+        ('muscle_gain', 'Muscle Gain'),
+        ('maintain', 'Maintain Weight'),
+    ]
+    BUDGET_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='weekly_meal_plans')
+    goal = models.CharField(max_length=20, choices=GOAL_CHOICES)
+    meals_per_day = models.IntegerField(default=3)  # 3-6 meals
+    favorite_foods = models.TextField(blank=True, null=True)
+    forbidden_foods = models.TextField(blank=True, null=True)
+    allergies = models.TextField(blank=True, null=True)
+    max_cooking_time = models.IntegerField(default=60)  # in minutes
+    budget = models.CharField(max_length=10, choices=BUDGET_CHOICES, default='medium')
+    ai_response = models.TextField(blank=True, null=True)  # Store raw AI response
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Weekly Plan #{self.id} - {self.user.username}'
+
+
+class DailyMeal(models.Model):
+    MEAL_TYPE_CHOICES = [
+        ('breakfast', 'Breakfast'),
+        ('lunch', 'Lunch'),
+        ('dinner', 'Dinner'),
+        ('snack', 'Snack'),
+    ]
+
+    weekly_plan = models.ForeignKey(WeeklyMealPlan, on_delete=models.CASCADE, related_name='daily_meals')
+    day_of_week = models.IntegerField(default=0)  # 0=Monday, 6=Sunday
+    meal_type = models.CharField(max_length=20, choices=MEAL_TYPE_CHOICES)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    ingredients = models.TextField()
+    cooking_time = models.IntegerField(default=30)  # in minutes
+    calories = models.IntegerField(default=0)
+    protein = models.FloatField(default=0)  # grams
+    fat = models.FloatField(default=0)  # grams
+    carbs = models.FloatField(default=0)  # grams
+
+    class Meta:
+        ordering = ['day_of_week', 'meal_type']
+
+    def __str__(self):
+        return f'{self.title} - Day {self.day_of_week + 1}'

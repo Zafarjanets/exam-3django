@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% load i18n meal_filters %}
+
+{% block title %}Meal Plan Details - FridgeMaster AI{% endblock %}
+
+{% block page_title %}{% trans "Meal Plan Details" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(16,185,129,0.05));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        margin-bottom: 32px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+    
+    .detail-value {
+        font-family: 'Poppins', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+    }
+    
+    .detail-value.icon {
+        font-size: 28px;
+    }
+    
+    .meal-card {
+        background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(16,185,129,0.05));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .meal-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 10px 30px rgba(124,58,237,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .meal-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-size: 18px;
+    }
+    
+    .meal-icon {
+        font-size: 28px;
+    }
+    
+    .meal-title {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--text);
+    }
+    
+    .meal-description {
+        color: var(--text-muted);
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+    }
+    
+    .macro-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+    
+    .macro-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .macro-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+    
+    .macro-bar {
+        height: 24px;
+        background: var(--bg-hover);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .macro-fill {
+        height: 100%;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        transition: width 0.3s ease;
+    }
+    
+    .macro-protein { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .macro-fat { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .macro-carbs { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .macro-calories { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    
+    .ingredients-list {
+        background: var(--bg-hover);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text-muted);
+        margin-top: 12px;
+    }
+    
+    .day-section {
+        margin-bottom: 40px;
+        animation: fadeInUp 0.6s ease both;
+    }
+    
+    .day-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--primary);
+    }
+    
+    .day-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #a78bfa);
+        color: white;
+        font-weight: 700;
+        font-size: 16px;
+    }
+    
+    .day-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 768px) {
+        .detail-header {
+            grid-template-columns: 1fr;
+        }
+        
+        .macro-bars {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .meal-card {
+            padding: 16px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-header">
+    <div class="detail-item">
+        <span class="detail-label">🎯 Goal</span>
+        <span class="detail-value">
+            {% if meal_plan.goal == 'weight_loss' %}⬇️{% elif meal_plan.goal == 'muscle_gain' %}⬆️{% else %}➡️{% endif %}
+            {{ meal_plan.get_goal_display }}
+        </span>
+    </div>
+    <div class="detail-item">
+        <span class="detail-label">🍽️ Meals/Day</span>
+        <span class="detail-value">{{ meal_plan.meals_per_day }}</span>
+    </div>
+    <div class="detail-item">
+        <span class="detail-label">💰 Budget</span>
+        <span class="detail-value">
+            {% if meal_plan.budget == 'low' %}💰{% elif meal_plan.budget == 'high' %}💎{% else %}💵{% endif %}
+            {{ meal_plan.get_budget_display }}
+        </span>
+    </div>
+    <div class="detail-item">
+        <span class="detail-label">⏱️ Max Cooking Time</span>
+        <span class="detail-value">{{ meal_plan.max_cooking_time }} min</span>
+    </div>
+    <div class="detail-item">
+        <span class="detail-label">📅 Created</span>
+        <span class="detail-value" style="font-size: 16px;">{{ meal_plan.created_at|date:"d.m.Y" }}</span>
+    </div>
+</div>
+
+{% if meal_plan.favorite_foods %}
+<div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
+    <strong style="color: var(--text);">✅ Favorite Foods:</strong> {{ meal_plan.favorite_foods }}
+</div>
+{% endif %}
+
+{% if meal_plan.forbidden_foods %}
+<div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
+    <strong style="color: var(--text);">❌ Forbidden Foods:</strong> {{ meal_plan.forbidden_foods }}
+</div>
+{% endif %}
+
+{% if meal_plan.allergies %}
+<div style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
+    <strong style="color: var(--text);">⚠️ Allergies:</strong> {{ meal_plan.allergies }}
+</div>
+{% endif %}
+
+<div class="action-buttons">
+    <form method="POST" action="{% url 'regenerate_meal_plan' meal_plan.id %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">
+            <i class="ti ti-refresh"></i> {% trans "Regenerate Plan" %}
+        </button>
+    </form>
+    <a href="{% url 'delete_meal_plan' meal_plan.id %}" class="btn btn-danger">
+        <i class="ti ti-trash"></i> {% trans "Delete Plan" %}
+    </a>
+    <a href="{% url 'meal_plans_history' %}" class="btn btn-secondary">
+        <i class="ti ti-arrow-left"></i> {% trans "Back to History" %}
+    </a>
+</div>
+
+{% for day_num, day_data in daily_meals_by_day.items %}
+<div class="day-section">
+    <div class="day-header">
+        <div class="day-badge">{{ day_num|add:1 }}</div>
+        <div class="day-title">{{ day_data.day_name }}</div>
+    </div>
+    
+    {% for meal in day_data.meals %}
+    <div class="meal-card">
+        <div class="meal-header">
+            <span class="meal-icon">
+                {% if meal.meal_type == 'breakfast' %}🍳
+                {% elif meal.meal_type == 'lunch' %}🍽️
+                {% elif meal.meal_type == 'dinner' %}🍲
+                {% elif meal.meal_type == 'snack' %}🥗
+                {% endif %}
+            </span>
+            <span class="meal-title">{{ meal.title }}</span>
+            <span style="color: var(--text-muted); font-size: 12px; margin-left: auto;">
+                <i class="ti ti-clock"></i> {{ meal.cooking_time }}min
+            </span>
+        </div>
+        
+        <div class="meal-description">{{ meal.description }}</div>
+        
+        {% if meal.ingredients %}
+        <div class="ingredients-list">
+            <strong style="color: var(--text);">{% trans "Ingredients:" %}</strong><br>
+            {{ meal.ingredients }}
+        </div>
+        {% endif %}
+        
+        <div class="macro-bars">
+            <div class="macro-item">
+                <span class="macro-label">{% trans "Calories" %}</span>
+                <div class="macro-bar">
+                    <div class="macro-fill macro-calories" style="width: {{ meal.calories|default:0 | add:1 }}%; max-width: 100%;">
+                        {{ meal.calories }} kcal
+                    </div>
+                </div>
+            </div>
+            <div class="macro-item">
+                <span class="macro-label">{% trans "Protein" %}</span>
+                <div class="macro-bar">
+                    <div class="macro-fill macro-protein" style="width: {{ meal.protein|default:0 | mul:2 }}%; max-width: 100%;">
+                        {{ meal.protein|floatformat:1 }}g
+                    </div>
+                </div>
+            </div>
+            <div class="macro-item">
+                <span class="macro-label">{% trans "Fat" %}</span>
+                <div class="macro-bar">
+                    <div class="macro-fill macro-fat" style="width: {{ meal.fat|default:0 | mul:2 }}%; max-width: 100%;">
+                        {{ meal.fat|floatformat:1 }}g
+                    </div>
+                </div>
+            </div>
+            <div class="macro-item">
+                <span class="macro-label">{% trans "Carbs" %}</span>
+                <div class="macro-bar">
+                    <div class="macro-fill macro-carbs" style="width: {{ meal.carbs|default:0 | div:2 }}%; max-width: 100%;">
+                        {{ meal.carbs|floatformat:1 }}g
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -275,6 +275,9 @@
                     <a href="{% url 'image_search' %}" class="nav-item {% if request.resolver_match.url_name == 'image_search' %}active{% endif %}">
                         <i class="ti ti-camera"></i><span>{% trans "Сканировать фото" %}</span>
                     </a>
+                    <a href="{% url 'weekly_meal_planner' %}" class="nav-item {% if request.resolver_match.url_name == 'weekly_meal_planner' %}active{% endif %}">
+                        <i class="ti ti-calendar-week"></i><span>{% trans "Недельный план" %}</span>
+                    </a>
                 </div>
 
                 {% if user.is_authenticated %}
@@ -285,6 +288,9 @@
                     </a>
                     <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
                         <i class="ti ti-history"></i><span>{% trans "История" %}</span>
+                    </a>
+                    <a href="{% url 'meal_plans_history' %}" class="nav-item {% if request.resolver_match.url_name == 'meal_plans_history' %}active{% endif %}">
+                        <i class="ti ti-list"></i><span>{% trans "Мои планы" %}</span>
                     </a>
                     <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
                         <i class="ti ti-user"></i><span>{% trans "Профиль" %}</span>
