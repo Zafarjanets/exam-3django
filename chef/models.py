@@ -120,14 +120,14 @@ class Review(models.Model):
 
 class WeeklyMealPlan(models.Model):
     GOAL_CHOICES = [
-        ('weight_loss', 'Weight Loss'),
-        ('muscle_gain', 'Muscle Gain'),
-        ('maintain', 'Maintain Weight'),
+        ('weight_loss', 'Снижение Веса'),
+        ('muscle_gain', 'Набор Мышц'),
+        ('maintain', 'Поддержание Веса'),
     ]
     BUDGET_CHOICES = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
+        ('low', 'Низкий 💰'),
+        ('medium', 'Средний 💵'),
+        ('high', 'Высокий 💎'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='weekly_meal_plans')
@@ -141,6 +141,8 @@ class WeeklyMealPlan(models.Model):
     ai_response = models.TextField(blank=True, null=True)  # Store raw AI response
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)  # Soft delete flag
+    deleted_at = models.DateTimeField(blank=True, null=True)  # Soft delete timestamp
 
     class Meta:
         ordering = ['-created_at']

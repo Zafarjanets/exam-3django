@@ -500,9 +500,10 @@ def weekly_meal_planner(request):
 
 @login_required
 def meal_plans_history(request):
-    """Display user's meal plan history."""
+    """Display user's meal plan history (including soft-deleted plans)."""
     from .models import WeeklyMealPlan
     
+    # Show all plans (active and soft-deleted), sorted by creation date
     plans = WeeklyMealPlan.objects.filter(user=request.user).order_by('-created_at')
     
     context = {
@@ -546,13 +547,17 @@ def meal_plan_detail(request, plan_id):
 
 @login_required
 def delete_meal_plan(request, plan_id):
-    """Delete a meal plan."""
+    """Soft delete a meal plan (mark as deleted but keep in history)."""
+    from django.utils import timezone
     from .models import WeeklyMealPlan
     
     meal_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
     
     if request.method == "POST":
-        meal_plan.delete()
+        # Soft delete: mark as deleted instead of removing
+        meal_plan.is_deleted = True
+        meal_plan.deleted_at = timezone.now()
+        meal_plan.save()
         return redirect('meal_plans_history')
     
     context = {
@@ -563,11 +568,30 @@ def delete_meal_plan(request, plan_id):
 
 
 @login_required
+def meal_plan_permanent_delete(request, plan_id):
+    """Permanently delete a meal plan (remove from database)."""
+    from .models import WeeklyMealPlan
+    
+    meal_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
+    
+    if request.method == "POST":
+        # Hard delete: permanently remove from database
+        meal_plan.delete()
+        return redirect('meal_plans_history')
+    
+    return redirect('meal_plans_history')
+
+
+@login_required
 def regenerate_meal_plan(request, plan_id):
     """Regenerate a meal plan with the same parameters."""
     from .models import WeeklyMealPlan, DailyMeal
     
     original_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
+    
+    # Prevent regenerating deleted plans
+    if original_plan.is_deleted:
+        return redirect('meal_plans_history')
     
     if request.method == "POST":
         try:

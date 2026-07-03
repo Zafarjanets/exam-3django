@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load i18n static meal_filters %}
 
-{% block title %}Weekly Meal Planner - FridgeMaster AI{% endblock %}
+{% block title %}Недельный Планировщик Меню - FridgeMaster AI{% endblock %}
 
-{% block page_title %}{% trans "Weekly Meal Planner" %}{% endblock %}
+{% block page_title %}Недельный Планировщик Меню{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'weekly_meal_planner.css' %}">
@@ -232,12 +232,12 @@
 {% block content %}
 <div class="form-section">
     <h2 style="font-family: 'Poppins', sans-serif; font-size: 24px; margin-bottom: 24px;">
-        {% trans "Create Your Weekly Meal Plan" %}
+        Создайте Свой Недельный План Питания
     </h2>
     
     {% if error %}
     <div class="error-message">
-        <strong>Error:</strong> {{ error }}
+        <strong>Ошибка:</strong> {{ error }}
     </div>
     {% endif %}
     
@@ -283,13 +283,13 @@
                 {{ form.max_cooking_time.label_tag }}
                 <div style="display: flex; align-items: center; gap: 8px;">
                     {{ form.max_cooking_time }}
-                    <span style="color: var(--text-muted); font-size: 14px;">min</span>
+                    <span style="color: var(--text-muted); font-size: 14px;">мин</span>
                 </div>
             </div>
         </div>
         
         <button type="submit" class="btn btn-primary btn-full" style="margin-top: 20px; padding: 14px 24px; font-size: 16px;">
-            <i class="ti ti-sparkles"></i> {% trans "Generate AI Plan" %}
+            <i class="ti ti-sparkles"></i> Создать План AI
         </button>
     </form>
 </div>
@@ -298,21 +298,21 @@
 <div class="results-container">
     <div class="plan-summary">
         <div class="summary-card">
-            <div class="summary-label">{% trans "Goal" %}</div>
+            <div class="summary-label">Цель</div>
             <div class="summary-value">
                 {% if meal_plan.goal == 'weight_loss' %}⬇️{% elif meal_plan.goal == 'muscle_gain' %}⬆️{% else %}➡️{% endif %}
                 {{ meal_plan.get_goal_display }}
             </div>
         </div>
         <div class="summary-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
-            <div class="summary-label">{% trans "Budget" %}</div>
+            <div class="summary-label">Бюджет</div>
             <div class="summary-value">
                 {% if meal_plan.budget == 'low' %}💰{% elif meal_plan.budget == 'high' %}💎{% else %}💵{% endif %}
                 {{ meal_plan.get_budget_display }}
             </div>
         </div>
         <div class="summary-card" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
-            <div class="summary-label">{% trans "Meals/Day" %}</div>
+            <div class="summary-label">Приемов/День</div>
             <div class="summary-value">🍽️ {{ meal_plan.meals_per_day }}</div>
         </div>
     </div>
@@ -336,7 +336,7 @@
                 </span>
                 <span class="meal-title">{{ meal.title }}</span>
                 <span style="color: var(--text-muted); font-size: 12px; margin-left: auto;">
-                    <i class="ti ti-clock"></i> {{ meal.cooking_time }}min
+                    <i class="ti ti-clock"></i> {{ meal.cooking_time }}мин
                 </span>
             </div>
             
@@ -344,8 +344,62 @@
             
             {% if meal.ingredients %}
             <div class="ingredients-list">
-                <strong style="color: var(--text);">{% trans "Ingredients:" %}</strong><br>
+                <strong style="color: var(--text);">Ингредиенты:</strong><br>
                 {{ meal.ingredients }}
             </div>
             {% endif %}
             
+            <div class="macro-bars">
+                <div class="macro-item">
+                    <span class="macro-label">Калории</span>
+                    <div class="macro-bar">
+                        <div class="macro-fill macro-calories" style="width: {{ meal.calories|default:0 | add:1 }}%; max-width: 100%;">
+                            {{ meal.calories }} ккал
+                        </div>
+                    </div>
+                </div>
+                <div class="macro-item">
+                    <span class="macro-label">Белки</span>
+                    <div class="macro-bar">
+                        <div class="macro-fill macro-protein" style="width: {{ meal.protein|default:0 | mul:2 }}%; max-width: 100%;">
+                            {{ meal.protein|floatformat:1 }}г
+                        </div>
+                    </div>
+                </div>
+                <div class="macro-item">
+                    <span class="macro-label">Жиры</span>
+                    <div class="macro-bar">
+                        <div class="macro-fill macro-fat" style="width: {{ meal.fat|default:0 | mul:2 }}%; max-width: 100%;">
+                            {{ meal.fat|floatformat:1 }}г
+                        </div>
+                    </div>
+                </div>
+                <div class="macro-item">
+                    <span class="macro-label">Углеводы</span>
+                    <div class="macro-bar">
+                        <div class="macro-fill macro-carbs" style="width: {{ meal.carbs|default:0 | div:2 }}%; max-width: 100%;">
+                            {{ meal.carbs|floatformat:1 }}г
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    
+    <div style="display: flex; gap: 12px; margin-top: 32px;">
+        <a href="{% url 'meal_plan_detail' meal_plan.id %}" class="btn btn-primary">
+            <i class="ti ti-eye"></i> Посмотреть План
+        </a>
+        <form method="POST" action="{% url 'regenerate_meal_plan' meal_plan.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary">
+                <i class="ti ti-refresh"></i> Переделать
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -21,5 +21,6 @@ urlpatterns = [
     path('meal-plans/', views.meal_plans_history, name='meal_plans_history'),
     path('meal-plan/<int:plan_id>/', views.meal_plan_detail, name='meal_plan_detail'),
     path('meal-plan/<int:plan_id>/delete/', views.delete_meal_plan, name='delete_meal_plan'),
+    path('meal-plan/<int:plan_id>/permanent-delete/', views.meal_plan_permanent_delete, name='meal_plan_permanent_delete'),
     path('meal-plan/<int:plan_id>/regenerate/', views.regenerate_meal_plan, name='regenerate_meal_plan'),
 ]

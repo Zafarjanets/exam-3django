@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}My Meal Plans - FridgeMaster AI{% endblock %}
+{% block title %}Мои Планы Питания - FridgeMaster AI{% endblock %}
 
-{% block page_title %}{% trans "My Meal Plans" %}{% endblock %}
+{% block page_title %}Мои Планы Питания{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -182,47 +182,73 @@
             
             <div class="plan-stats">
                 <div class="stat-item">
-                    <span class="stat-label">🍽️ Meals/Day</span>
+                    <span class="stat-label">🍽️ Приемов/День</span>
                     <span class="stat-value">{{ plan.meals_per_day }}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">💰 Budget</span>
+                    <span class="stat-label">💰 Бюджет</span>
                     <span class="stat-value">
                         {% if plan.budget == 'low' %}💰{% elif plan.budget == 'high' %}💎{% else %}💵{% endif %}
                     </span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">⏱️ Max Time</span>
-                    <span class="stat-value">{{ plan.max_cooking_time }}m</span>
+                    <span class="stat-label">⏱️ Макс. Время</span>
+                    <span class="stat-value">{{ plan.max_cooking_time }}м</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">📅 Duration</span>
-                    <span class="stat-value">7 days</span>
+                    <span class="stat-label">📅 Длительность</span>
+                    <span class="stat-value">7 дней</span>
                 </div>
             </div>
             
             {% if plan.allergies %}
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
                 <i class="ti ti-alert-circle"></i> 
-                Allergies: {{ plan.allergies|truncatewords:3 }}
+                Аллергии: {{ plan.allergies|truncatewords:3 }}
+            </div>
+            {% endif %}
+            
+            {% if plan.is_deleted %}
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; padding: 8px 12px; margin: 12px 0; font-size: 12px; color: #ef4444;">
+                🗑️ Удален {{ plan.deleted_at|date:"d.m.Y H:i" }}
             </div>
             {% endif %}
             
             <div class="plan-actions">
                 <a href="{% url 'meal_plan_detail' plan.id %}" class="action-btn">
-                    <i class="ti ti-eye"></i> View
+                    <i class="ti ti-eye"></i> Просмотр
                 </a>
+                {% if not plan.is_deleted %}
                 <form method="POST" action="{% url 'regenerate_meal_plan' plan.id %}" style="flex: 1;">
                     {% csrf_token %}
                     <button type="submit" class="action-btn" style="width: 100%; border: none; background: var(--primary); color: white;">
-                        <i class="ti ti-refresh"></i> Regenerate
+                        <i class="ti ti-refresh"></i> Заново
                     </button>
                 </form>
                 <a href="{% url 'delete_meal_plan' plan.id %}" class="action-btn danger">
-                    <i class="ti ti-trash"></i> Delete
+                    <i class="ti ti-trash"></i> Удалить
                 </a>
+                {% else %}
+                <form method="POST" action="{% url 'meal_plan_permanent_delete' plan.id %}" style="flex: 1;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn danger" style="width: 100%; background: #ef4444; color: white;" onclick="return confirm('Навсегда удалить этот план?');">
+                        <i class="ti ti-trash-x"></i> Удалить Навсегда
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
 {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">Планов нет</div>
+        <div class="empty-text">Создайте свой первый недельный план питания с помощью AI</div>
+        <a href="{% url 'weekly_meal_planner' %}" class="btn btn-primary">
+            <i class="ti ti-sparkles"></i> Создать План
+        </a>
+    </div>
+{% endif %}
+
+{% endblock %}

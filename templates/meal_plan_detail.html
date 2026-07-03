@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load i18n meal_filters %}
 
-{% block title %}Meal Plan Details - FridgeMaster AI{% endblock %}
+{% block title %}Детали Плана Питания - FridgeMaster AI{% endblock %}
 
-{% block page_title %}{% trans "Meal Plan Details" %}{% endblock %}
+{% block page_title %}Детали Плана Питания{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -207,48 +207,48 @@
 
 <div class="detail-header">
     <div class="detail-item">
-        <span class="detail-label">🎯 Goal</span>
+        <span class="detail-label">🎯 Цель</span>
         <span class="detail-value">
             {% if meal_plan.goal == 'weight_loss' %}⬇️{% elif meal_plan.goal == 'muscle_gain' %}⬆️{% else %}➡️{% endif %}
             {{ meal_plan.get_goal_display }}
         </span>
     </div>
     <div class="detail-item">
-        <span class="detail-label">🍽️ Meals/Day</span>
+        <span class="detail-label">🍽️ Приемов/День</span>
         <span class="detail-value">{{ meal_plan.meals_per_day }}</span>
     </div>
     <div class="detail-item">
-        <span class="detail-label">💰 Budget</span>
+        <span class="detail-label">💰 Бюджет</span>
         <span class="detail-value">
             {% if meal_plan.budget == 'low' %}💰{% elif meal_plan.budget == 'high' %}💎{% else %}💵{% endif %}
             {{ meal_plan.get_budget_display }}
         </span>
     </div>
     <div class="detail-item">
-        <span class="detail-label">⏱️ Max Cooking Time</span>
-        <span class="detail-value">{{ meal_plan.max_cooking_time }} min</span>
+        <span class="detail-label">⏱️ Макс. Время Готовки</span>
+        <span class="detail-value">{{ meal_plan.max_cooking_time }} мин</span>
     </div>
     <div class="detail-item">
-        <span class="detail-label">📅 Created</span>
+        <span class="detail-label">📅 Создан</span>
         <span class="detail-value" style="font-size: 16px;">{{ meal_plan.created_at|date:"d.m.Y" }}</span>
     </div>
 </div>
 
 {% if meal_plan.favorite_foods %}
 <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
-    <strong style="color: var(--text);">✅ Favorite Foods:</strong> {{ meal_plan.favorite_foods }}
+    <strong style="color: var(--text);">✅ Избранные Продукты:</strong> {{ meal_plan.favorite_foods }}
 </div>
 {% endif %}
 
 {% if meal_plan.forbidden_foods %}
 <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
-    <strong style="color: var(--text);">❌ Forbidden Foods:</strong> {{ meal_plan.forbidden_foods }}
+    <strong style="color: var(--text);">❌ Запрещенные Продукты:</strong> {{ meal_plan.forbidden_foods }}
 </div>
 {% endif %}
 
 {% if meal_plan.allergies %}
 <div style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
-    <strong style="color: var(--text);">⚠️ Allergies:</strong> {{ meal_plan.allergies }}
+    <strong style="color: var(--text);">⚠️ Аллергии:</strong> {{ meal_plan.allergies }}
 </div>
 {% endif %}
 
@@ -256,14 +256,14 @@
     <form method="POST" action="{% url 'regenerate_meal_plan' meal_plan.id %}" style="display: inline;">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary">
-            <i class="ti ti-refresh"></i> {% trans "Regenerate Plan" %}
+            <i class="ti ti-refresh"></i> Заново Создать План
         </button>
     </form>
     <a href="{% url 'delete_meal_plan' meal_plan.id %}" class="btn btn-danger">
-        <i class="ti ti-trash"></i> {% trans "Delete Plan" %}
+        <i class="ti ti-trash"></i> Удалить План
     </a>
     <a href="{% url 'meal_plans_history' %}" class="btn btn-secondary">
-        <i class="ti ti-arrow-left"></i> {% trans "Back to History" %}
+        <i class="ti ti-arrow-left"></i> Вернуться к Истории
     </a>
 </div>
 
@@ -294,38 +294,38 @@
         
         {% if meal.ingredients %}
         <div class="ingredients-list">
-            <strong style="color: var(--text);">{% trans "Ingredients:" %}</strong><br>
+            <strong style="color: var(--text);">Ингредиенты:</strong><br>
             {{ meal.ingredients }}
         </div>
         {% endif %}
         
         <div class="macro-bars">
             <div class="macro-item">
-                <span class="macro-label">{% trans "Calories" %}</span>
+                <span class="macro-label">Калории</span>
                 <div class="macro-bar">
                     <div class="macro-fill macro-calories" style="width: {{ meal.calories|default:0 | add:1 }}%; max-width: 100%;">
-                        {{ meal.calories }} kcal
+                        {{ meal.calories }} ккал
                     </div>
                 </div>
             </div>
             <div class="macro-item">
-                <span class="macro-label">{% trans "Protein" %}</span>
+                <span class="macro-label">Белки</span>
                 <div class="macro-bar">
                     <div class="macro-fill macro-protein" style="width: {{ meal.protein|default:0 | mul:2 }}%; max-width: 100%;">
-                        {{ meal.protein|floatformat:1 }}g
+                        {{ meal.protein|floatformat:1 }}г
                     </div>
                 </div>
             </div>
             <div class="macro-item">
-                <span class="macro-label">{% trans "Fat" %}</span>
+                <span class="macro-label">Жиры</span>
                 <div class="macro-bar">
                     <div class="macro-fill macro-fat" style="width: {{ meal.fat|default:0 | mul:2 }}%; max-width: 100%;">
-                        {{ meal.fat|floatformat:1 }}g
+                        {{ meal.fat|floatformat:1 }}г
                     </div>
                 </div>
             </div>
             <div class="macro-item">
-                <span class="macro-label">{% trans "Carbs" %}</span>
+                <span class="macro-label">Углеводы</span>
                 <div class="macro-bar">
                     <div class="macro-fill macro-carbs" style="width: {{ meal.carbs|default:0 | div:2 }}%; max-width: 100%;">
                         {{ meal.carbs|floatformat:1 }}g

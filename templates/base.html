@@ -256,7 +256,6 @@
 </head>
 <body data-theme="dark">
     <div class="app">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <a href="{% url 'home' %}" class="logo">
                 <div class="logo-icon"><i class="ti ti-fridge"></i></div>
@@ -312,12 +311,10 @@
             </div>
         </aside>
 
-        <!-- Main -->
         <main class="main">
             <div class="topbar">
                 <h1 class="page-title">{% block page_title %}{% trans "Добро пожаловать" %}{% endblock %}</h1>
                 <div class="topbar-actions">
-                    <!-- Language Switcher -->
                     <div style="position:relative;">
                         <button class="icon-btn" onclick="document.getElementById('langDropdown').classList.toggle('hidden')" title="{% trans 'Язык' %}">
                             <i class="ti ti-language"></i>
@@ -328,7 +325,6 @@
                             <a href="{% url 'set_language' %}?lang=tg" class="nav-item" style="padding:8px 12px;">🇹🇯 Тоҷикӣ</a>
                         </div>
                     </div>
-                    <!-- Theme Toggle -->
                     <button class="icon-btn" id="themeToggle" title="{% trans 'Тема' %}">
                         <i class="ti ti-moon" id="themeIcon"></i>
                     </button>
@@ -342,7 +338,6 @@
     </div>
 
     <script>
-        // Theme Toggle
         function getTheme() { return localStorage.getItem('theme') || 'dark'; }
         function setTheme(theme) {
             document.body.setAttribute('data-theme', theme);
@@ -354,7 +349,6 @@
             setTheme(getTheme() === 'dark' ? 'light' : 'dark');
         });
 
-        // Close dropdowns on outside click
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.icon-btn')) {
                 document.getElementById('langDropdown')?.classList.add('hidden');
