@@ -141,3 +141,88 @@
         margin-bottom: 16px;
     }
     
+    .empty-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 8px;
+    }
+    
+    .empty-text {
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if plans %}
+    <div class="plans-grid">
+        {% for plan in plans %}
+        <div class="plan-card">
+            <div class="plan-header">
+                <span class="plan-icon">
+                    {% if plan.goal == 'weight_loss' %}⬇️
+                    {% elif plan.goal == 'muscle_gain' %}⬆️
+                    {% else %}➡️
+                    {% endif %}
+                </span>
+                <div>
+                    <h3 style="font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700;">
+                        {{ plan.get_goal_display }}
+                    </h3>
+                    <div class="plan-date">
+                        <i class="ti ti-calendar"></i> 
+                        {{ plan.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="plan-stats">
+                <div class="stat-item">
+                    <span class="stat-label">🍽️ Meals/Day</span>
+                    <span class="stat-value">{{ plan.meals_per_day }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">💰 Budget</span>
+                    <span class="stat-value">
+                        {% if plan.budget == 'low' %}💰{% elif plan.budget == 'high' %}💎{% else %}💵{% endif %}
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">⏱️ Max Time</span>
+                    <span class="stat-value">{{ plan.max_cooking_time }}m</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">📅 Duration</span>
+                    <span class="stat-value">7 days</span>
+                </div>
+            </div>
+            
+            {% if plan.allergies %}
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
+                <i class="ti ti-alert-circle"></i> 
+                Allergies: {{ plan.allergies|truncatewords:3 }}
+            </div>
+            {% endif %}
+            
+            <div class="plan-actions">
+                <a href="{% url 'meal_plan_detail' plan.id %}" class="action-btn">
+                    <i class="ti ti-eye"></i> View
+                </a>
+                <form method="POST" action="{% url 'regenerate_meal_plan' plan.id %}" style="flex: 1;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn" style="width: 100%; border: none; background: var(--primary); color: white;">
+                        <i class="ti ti-refresh"></i> Regenerate
+                    </button>
+                </form>
+                <a href="{% url 'delete_meal_plan' plan.id %}" class="action-btn danger">
+                    <i class="ti ti-trash"></i> Delete
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
