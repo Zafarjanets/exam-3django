@@ -233,3 +233,119 @@
 <div class="form-section">
     <h2 style="font-family: 'Poppins', sans-serif; font-size: 24px; margin-bottom: 24px;">
         {% trans "Create Your Weekly Meal Plan" %}
+    </h2>
+    
+    {% if error %}
+    <div class="error-message">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" class="meal-planner-form">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <div class="form-group">
+                {{ form.goal.label_tag }}
+                {{ form.goal }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.meals_per_day.label_tag }}
+                {{ form.meals_per_day }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.budget.label_tag }}
+                {{ form.budget }}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                {{ form.favorite_foods.label_tag }}
+                {{ form.favorite_foods }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.forbidden_foods.label_tag }}
+                {{ form.forbidden_foods }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.allergies.label_tag }}
+                {{ form.allergies }}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                {{ form.max_cooking_time.label_tag }}
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    {{ form.max_cooking_time }}
+                    <span style="color: var(--text-muted); font-size: 14px;">min</span>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 20px; padding: 14px 24px; font-size: 16px;">
+            <i class="ti ti-sparkles"></i> {% trans "Generate AI Plan" %}
+        </button>
+    </form>
+</div>
+
+{% if meal_plan and daily_meals_by_day %}
+<div class="results-container">
+    <div class="plan-summary">
+        <div class="summary-card">
+            <div class="summary-label">{% trans "Goal" %}</div>
+            <div class="summary-value">
+                {% if meal_plan.goal == 'weight_loss' %}⬇️{% elif meal_plan.goal == 'muscle_gain' %}⬆️{% else %}➡️{% endif %}
+                {{ meal_plan.get_goal_display }}
+            </div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
+            <div class="summary-label">{% trans "Budget" %}</div>
+            <div class="summary-value">
+                {% if meal_plan.budget == 'low' %}💰{% elif meal_plan.budget == 'high' %}💎{% else %}💵{% endif %}
+                {{ meal_plan.get_budget_display }}
+            </div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+            <div class="summary-label">{% trans "Meals/Day" %}</div>
+            <div class="summary-value">🍽️ {{ meal_plan.meals_per_day }}</div>
+        </div>
+    </div>
+    
+    {% for day_num, day_data in daily_meals_by_day.items %}
+    <div class="day-section">
+        <div class="day-header">
+            <div class="day-badge">{{ day_num|add:1 }}</div>
+            <div class="day-title">{{ day_data.day_name }}</div>
+        </div>
+        
+        {% for meal in day_data.meals %}
+        <div class="meal-card">
+            <div class="meal-header">
+                <span class="meal-icon">
+                    {% if meal.meal_type == 'breakfast' %}🍳
+                    {% elif meal.meal_type == 'lunch' %}🍽️
+                    {% elif meal.meal_type == 'dinner' %}🍲
+                    {% elif meal.meal_type == 'snack' %}🥗
+                    {% endif %}
+                </span>
+                <span class="meal-title">{{ meal.title }}</span>
+                <span style="color: var(--text-muted); font-size: 12px; margin-left: auto;">
+                    <i class="ti ti-clock"></i> {{ meal.cooking_time }}min
+                </span>
+            </div>
+            
+            <div class="meal-description">{{ meal.description }}</div>
+            
+            {% if meal.ingredients %}
+            <div class="ingredients-list">
+                <strong style="color: var(--text);">{% trans "Ingredients:" %}</strong><br>
+                {{ meal.ingredients }}
+            </div>
+            {% endif %}
+            
