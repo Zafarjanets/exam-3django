@@ -119,7 +119,6 @@ def image_search(request):
         manual_ingredients = request.POST.get("manual_ingredients")
         image = request.FILES.get("image")
 
-        # Case 1: User submitted manual ingredients to get recipes
         if manual_ingredients:
             try:
                 ingredients_data = json.loads(manual_ingredients)
@@ -141,7 +140,6 @@ def image_search(request):
                     result = ai_request
             except Exception as e:
                 error = f"Произошла ошибка: {str(e)}"
-        # Case 2: User uploaded image to detect ingredients
         elif image:
             try:
                 obj = AIRecipeRequest.objects.create(
@@ -154,7 +152,7 @@ def image_search(request):
                 products = detect_products(obj.image.path)
 
                 if not products:
-                    products = []  # Empty list so user can add their own
+                    products = [] 
 
                 obj.detected_ingredients = ", ".join(products)
                 obj.save()
@@ -287,7 +285,6 @@ def profile(request):
     return render(request, 'profile.html', context)
 
 
-# ===== WEEKLY MEAL PLANNER FUNCTIONS =====
 
 def _build_weekly_meal_prompt(goal, meals_per_day, favorite_foods, forbidden_foods, allergies, max_cooking_time, budget):
     """Build prompt for AI to generate a weekly meal plan."""
@@ -370,12 +367,10 @@ def _parse_weekly_meal_plan(ai_text):
     """Parse AI response into structured meal plan data."""
     text = ai_text.strip()
     
-    # Try to extract JSON from markdown fences first
     fence_match = re.search(r'```(?:json)?\s*(.*?)\s*```', text, re.DOTALL)
     if fence_match:
         text = fence_match.group(1).strip()
     
-    # Find JSON boundaries
     start = text.find('{')
     end = text.rfind('}')
     if start != -1 and end != -1:
@@ -395,7 +390,7 @@ def _save_weekly_meal_plan(user, meal_plan_obj, plan_data):
     from .models import WeeklyMealPlan, DailyMeal
     
     for day_data in plan_data:
-        day_num = day_data.get('day', 1) - 1  # Convert to 0-indexed
+        day_num = day_data.get('day', 1) - 1  
         meals = day_data.get('meals', [])
         
         for meal_data in meals:
@@ -430,11 +425,9 @@ def weekly_meal_planner(request):
         form = WeeklyMealPlanForm(request.POST)
         if form.is_valid():
             try:
-                # Create meal plan object (without saving to DB yet)
                 meal_plan_obj = form.save(commit=False)
                 meal_plan_obj.user = request.user
                 
-                # Build prompt for AI
                 prompt = _build_weekly_meal_prompt(
                     goal=meal_plan_obj.goal,
                     meals_per_day=meal_plan_obj.meals_per_day,
@@ -445,28 +438,22 @@ def weekly_meal_planner(request):
                     budget=meal_plan_obj.budget,
                 )
                 
-                # Call AI
                 response = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[{"role": "user", "content": prompt}],
                 )
                 ai_response = response.choices[0].message.content
                 
-                # Parse response
                 plan_data = _parse_weekly_meal_plan(ai_response)
                 
-                # Save to database
                 meal_plan_obj.ai_response = ai_response
                 meal_plan_obj.save()
                 
-                # Save daily meals
                 _save_weekly_meal_plan(request.user, meal_plan_obj, plan_data)
                 
-                # Fetch saved meals for display
                 meal_plan = meal_plan_obj
                 daily_meals = DailyMeal.objects.filter(weekly_plan=meal_plan_obj).order_by('day_of_week', 'meal_type')
                 
-                # Group by day
                 daily_meals_by_day = {}
                 days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
                 for day_num in range(7):
@@ -503,7 +490,6 @@ def meal_plans_history(request):
     """Display user's meal plan history (including soft-deleted plans)."""
     from .models import WeeklyMealPlan
     
-    # Show all plans (active and soft-deleted), sorted by creation date
     plans = WeeklyMealPlan.objects.filter(user=request.user).order_by('-created_at')
     
     context = {
@@ -521,7 +507,6 @@ def meal_plan_detail(request, plan_id):
     meal_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
     daily_meals = DailyMeal.objects.filter(weekly_plan=meal_plan).order_by('day_of_week', 'meal_type')
     
-    # Group by day
     daily_meals_by_day = {}
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     for day_num in range(7):
@@ -554,7 +539,6 @@ def delete_meal_plan(request, plan_id):
     meal_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
     
     if request.method == "POST":
-        # Soft delete: mark as deleted instead of removing
         meal_plan.is_deleted = True
         meal_plan.deleted_at = timezone.now()
         meal_plan.save()
@@ -575,7 +559,6 @@ def meal_plan_permanent_delete(request, plan_id):
     meal_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
     
     if request.method == "POST":
-        # Hard delete: permanently remove from database
         meal_plan.delete()
         return redirect('meal_plans_history')
     
@@ -589,13 +572,11 @@ def regenerate_meal_plan(request, plan_id):
     
     original_plan = get_object_or_404(WeeklyMealPlan, id=plan_id, user=request.user)
     
-    # Prevent regenerating deleted plans
     if original_plan.is_deleted:
         return redirect('meal_plans_history')
     
     if request.method == "POST":
         try:
-            # Build new prompt with same parameters
             prompt = _build_weekly_meal_prompt(
                 goal=original_plan.goal,
                 meals_per_day=original_plan.meals_per_day,
@@ -606,17 +587,14 @@ def regenerate_meal_plan(request, plan_id):
                 budget=original_plan.budget,
             )
             
-            # Call AI
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": prompt}],
             )
             ai_response = response.choices[0].message.content
             
-            # Parse response
             plan_data = _parse_weekly_meal_plan(ai_response)
             
-            # Create new meal plan
             new_plan = WeeklyMealPlan.objects.create(
                 user=request.user,
                 goal=original_plan.goal,
@@ -629,7 +607,6 @@ def regenerate_meal_plan(request, plan_id):
                 ai_response=ai_response,
             )
             
-            # Save daily meals
             _save_weekly_meal_plan(request.user, new_plan, plan_data)
             
             return redirect('meal_plan_detail', plan_id=new_plan.id)
