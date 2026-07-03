@@ -1,170 +1,99 @@
 {% extends "base.html" %}
- 
-{% block title %}{{ dish.title }} | AI Recipe Assistant{% endblock %}
- 
+{% load i18n %}
+
+{% block title %}{{ dish.title }} | FridgeMaster{% endblock %}
+{% block page_title %}{{ dish.title }}{% endblock %}
+
 {% block content %}
-<section class="dish-hero reveal">
-    <div class="dish-hero-glow"></div>
-    <div class="dish-hero-inner glass-panel">
-        <a href="javascript:history.back()" class="btn btn-outline back-btn">
-            <span class="arrow-slide">←</span> Назад к вариантам
-        </a>
- 
-        <div class="dish-hero-top">
-            <div class="dish-hero-icon-wrap">
-                <span class="dish-hero-icon icon-bounce">🍽️</span>
-                <span class="dish-hero-ring"></span>
+<div class="detail-header">
+    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop" class="detail-image" alt="{{ dish.title }}">
+    <div class="detail-info">
+        <p style="color:var(--text-muted); font-size:16px; line-height:1.7; margin-bottom:20px;">
+            {{ dish.summary }}
+        </p>
+        <div class="detail-meta">
+            {% if dish.cooking_time %}
+            <div class="detail-meta-item">
+                <i class="ti ti-clock"></i>
+                <span>{% trans "Время приготовления" %}: {{ dish.cooking_time }} {% trans "мин" %}</span>
             </div>
-            <div class="dish-hero-text">
-                <h1 class="gradient-title">{{ dish.title }}</h1>
-                <p class="dish-hero-summary">{{ dish.summary }}</p>
+            {% endif %}
+            {% if dish.difficulty %}
+            <div class="detail-meta-item">
+                <i class="ti ti-fire"></i>
+                <span>{% trans "Сложность" %}: {{ dish.difficulty }}</span>
             </div>
+            {% endif %}
         </div>
- 
-        <div class="recipe-badges hero-badges">
-            <span class="badge badge-animated"><span class="badge-icon spin-slow">⏱️</span> {{ dish.cooking_time }} мин</span>
-            <span class="badge badge-success badge-animated"><span class="badge-icon">✨</span> {{ dish.get_difficulty_display }}</span>
-            <span class="badge badge-purple badge-animated"><span class="badge-icon pulse-soft">🤖</span> AI рецепт</span>
-        </div>
- 
-        <div class="dish-detail-actions">
-            {% if dish.is_favorited %}
-                <a href="{% url 'favorites' %}" class="btn btn-primary btn-glow">
-                    <span class="btn-icon heartbeat">❤️</span> Уже в избранном
-                </a>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            {% if user.is_authenticated %}
+            {% if dish.saved_recipe_id %}
+            <a href="{% url 'favorites' %}" class="btn btn-secondary">
+                <i class="ti ti-heart-filled"></i> {% trans "В избранном" %}
+            </a>
             {% else %}
-                <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary btn-glow">
-                    <span class="btn-icon heartbeat">❤️</span> Добавить в избранное
-                </a>
+            <a href="{% url 'add_ai_favorite' dish.id %}" class="btn btn-primary">
+                <i class="ti ti-heart"></i> {% trans "Добавить в избранное" %}
+            </a>
             {% endif %}
- 
-            {% if video_links %}
-                <a id="main-video-btn" href="{{ video_links.0.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-video btn-glow">
-                    <span class="btn-icon pulse-play">▶</span> Смотреть видео
-                </a>
             {% endif %}
+            <a href="https://www.youtube.com/results?search_query={{ dish.title|urlencode }}+recipe" target="_blank" class="btn btn-secondary">
+                <i class="ti ti-brand-youtube"></i> {% trans "Найти на YouTube" %}
+            </a>
         </div>
-    </div>
-</section>
- 
-{% if video_links %}
-<section class="video-section reveal">
-    <div class="section-header">
-        <span class="section-icon icon-bounce">📺</span>
-        <div>
-            <h2>Видео приготовления</h2>
-            <p>Подборка на YouTube по блюду и вашим продуктам</p>
-        </div>
-    </div>
-    <div id="video-links-list" class="video-links-list glass-panel"></div>
-    {{ video_links|json_script:"video-links-json" }}
-</section>
-{% endif %}
- 
-<div class="recipe-detail-grid">
-    <div class="glass-panel recipe-panel reveal">
-        <div class="panel-header">
-            <span class="panel-icon icon-bounce">📦</span>
-            <h3>Ингредиенты</h3>
-        </div>
-        <div id="ingredients-badges" class="recipe-badges ingredients-grid"></div>
-        {{ ingredients_json|json_script:"ingredients-json" }}
-    </div>
- 
-    <div class="glass-panel recipe-panel reveal">
-        <div class="panel-header">
-            <span class="panel-icon icon-bounce">👨‍🍳</span>
-            <h3>Как приготовить</h3>
-        </div>
-        <div id="cooking-steps" class="cooking-steps"></div>
-        {{ dish_detail_json|json_script:"dish-detail-json" }}
     </div>
 </div>
-{% endblock %}
- 
-{% block extra_js %}
-<script>
-(function () {
-    function readJSON(id) {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        try { return JSON.parse(el.textContent); }
-        catch (e) { console.error("Ошибка JSON #" + id, e); return null; }
-    }
- 
-    function escapeHTML(str) {
-        const div = document.createElement("div");
-        div.textContent = String(str);
-        return div.innerHTML;
-    }
- 
-    function renderIngredients() {
-        const data = readJSON("ingredients-json");
-        const container = document.getElementById("ingredients-badges");
-        if (!data || !container) return;
-        container.innerHTML = "";
-        data.forEach((name, i) => {
-            const span = document.createElement("span");
-            span.className = "badge badge-ingredients ingredient-pop";
-            span.style.animationDelay = `${i * 0.04}s`;
-            span.innerHTML = `<span class="badge-icon">•</span> ${escapeHTML(name)}`;
-            container.appendChild(span);
-        });
-    }
- 
-    function renderSteps() {
-        const data = readJSON("dish-detail-json");
-        const container = document.getElementById("cooking-steps");
-        if (!data || !container) return;
-        const steps = Array.isArray(data) ? data : data.steps || [];
-        container.innerHTML = "";
-        if (!steps.length) {
-            container.innerHTML = "<p>Шаги приготовления не найдены.</p>";
-            return;
-        }
-        steps.forEach((step, i) => {
-            const text = typeof step === "string" ? step : (step.text || step.description || "");
-            const row = document.createElement("div");
-            row.className = "cooking-step";
-            row.innerHTML = `<div class="cooking-step-num">${i + 1}</div><div class="cooking-step-text">${escapeHTML(text)}</div>`;
-            container.appendChild(row);
-        });
-    }
- 
-    function renderVideos() {
-        const data = readJSON("video-links-json");
-        const container = document.getElementById("video-links-list");
-        if (!data || !container) return;
-        container.innerHTML = "";
-        data.forEach((item) => {
-            const url = typeof item === "string" ? item : item.url;
-            const title = typeof item === "string" ? item : (item.title || url);
-            if (!url) return;
-            const a = document.createElement("a");
-            a.className = "video-link-item";
-            a.href = url;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.innerHTML = `<span class="video-link-play">▶</span><span class="video-link-title">${escapeHTML(title)}</span>`;
-            container.appendChild(a);
-        });
-    }
- 
-    function wireMainVideoButton() {
-        const btn = document.getElementById("main-video-btn");
-        const data = readJSON("video-links-json");
-        if (btn && data && data.length) {
-            const first = data[0];
-            btn.href = typeof first === "string" ? first : first.url;
-        }
-    }
- 
-    document.addEventListener("DOMContentLoaded", () => {
-        renderIngredients();
-        renderSteps();
-        renderVideos();
-        wireMainVideoButton();
-    });
-})();
-</script>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap:24px; margin-top:32px;">
+    <div class="card">
+        <h3 style="font-family:'Poppins',sans-serif; font-size:20px; font-weight:700; margin-bottom:16px;">
+            <i class="ti ti-shopping-cart" style="margin-right:8px; color:var(--primary);"></i>
+            {% trans "Ингредиенты" %}
+        </h3>
+        <ul style="list-style:none; padding:0; margin:0;">
+            {% for ing in ingredients %}
+            <li style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">
+                <span style="width:8px; height:8px; border-radius:50%; background:var(--primary); flex-shrink:0;"></span>
+                <span>{{ ing }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3 style="font-family:'Poppins',sans-serif; font-size:20px; font-weight:700; margin-bottom:16px;">
+            <i class="ti ti-list-check" style="margin-right:8px; color:var(--secondary);"></i>
+            {% trans "Инструкция" %}
+        </h3>
+        <div class="steps-list">
+            {% for step in dish.instructions.splitlines %}
+            {% if step.strip %}
+            <div class="step-item">
+                <div class="step-num">{{ forloop.counter }}</div>
+                <div class="step-text">{{ step.strip }}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if video_links %}
+<div style="margin-top:40px;">
+    <h3 style="font-family:'Poppins',sans-serif; font-size:24px; font-weight:700; margin-bottom:20px;">
+        <i class="ti ti-brand-youtube" style="color:#ef4444;"></i>
+        {% trans "Видео" %}
+    </h3>
+    <div class="grid">
+        {% for video in video_links %}
+        <div class="card">
+            <h4 style="font-weight:700; margin-bottom:12px;">{{ video.title|default:"Видео рецепт" }}</h4>
+            <a href="{{ video.url }}" target="_blank" class="btn btn-primary btn-full">
+                <i class="ti ti-player-play"></i> {% trans "Смотреть" %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

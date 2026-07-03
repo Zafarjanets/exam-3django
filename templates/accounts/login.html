@@ -1,51 +1,38 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в систему | AI Recipe Assistant</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'style.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
+{% load i18n %}
 
-    <div class="auth-page-wrapper">
-        <div class="auth-container">
-            <div style="text-align: center; margin-bottom: 15px; font-size: 32px;">🍳</div>
-            <h2>С возвращением</h2>
-            <p class="subtitle">Пожалуйста, войдите в свой аккаунт</p>
+{% block title %}{% trans "Вход" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "Вход" %}{% endblock %}
 
-            {% if error %}
-                <div class="alert alert-danger">{{ error }}</div>
-            {% endif %}
-
-            <form action="" method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="username">Имя пользователя или Email</label>
-                    <input type="text" id="username" name="username" placeholder="example_user" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Пароль</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required>
-                </div>
-
-                <button type="submit" class="btn-submit">Войти</button>
-            </form>
-
-            <div class="auth-footer">
-                Нет аккаунта? <a href="{% url 'register' %}">Создать аккаунт</a>
-            </div>
-            
-            <div style="text-align: center; margin-top: 25px; font-size: 13px;">
-                <a href="/" style="color: var(--text-secondary); text-decoration: none;">← На главную</a>
-            </div>
+{% block content %}
+<div class="card" style="max-width:500px; margin:0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div style="background: rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#ef4444; padding:14px 18px; border-radius:12px; margin-bottom:20px; display:flex; gap:10px; align-items:center;">
+            <i class="ti ti-alert-circle" style="font-size:20px;"></i>
+            {% trans "Неправильный логин или пароль" %}
         </div>
-    </div>
+        {% endif %}
 
-</body>
-</html>
+        <div class="form-group">
+            <label class="form-label">{% trans "Логин или почта" %}</label>
+            <input type="text" name="username" class="form-input" required autofocus>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{% trans "Пароль" %}</label>
+            <input type="password" name="password" class="form-input" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-bottom:16px;">
+            <i class="ti ti-login"></i>
+            {% trans "Войти" %}
+        </button>
+
+        <p style="text-align:center; color:var(--text-muted); font-size:14px;">
+            {% trans "Нет аккаунта?" %} <a href="{% url 'register' %}" style="color:var(--primary); font-weight:700; text-decoration:none;">{% trans "Зарегистрироваться" %}</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

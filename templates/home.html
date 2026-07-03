@@ -1,46 +1,93 @@
-{% extends 'base.html' %}
- 
-{% block title %}Главная | AI Recipe Assistant{% endblock %}
- 
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Главная" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "Простые блюда" %}{% endblock %}
+
 {% block content %}
-<section class="welcome-section reveal">
-    <div class="hero-icons">
-        <span class="hero-float-icon" style="--delay: 0s">🍳</span>
-        <span class="hero-float-icon" style="--delay: 0.5s">🥘</span>
-        <span class="hero-float-icon" style="--delay: 1s">🍲</span>
-    </div>
-    <h1 class="gradient-title hero-title">Кулинарный AI Ассистент</h1>
-    <p class="hero-subtitle">Создавайте рецепты за секунды — введите ингредиенты или загрузите фото продуктов</p>
- 
-    {% if not user.is_authenticated %}
-        <a href="{% url 'register' %}" class="btn btn-primary btn-glow hero-cta">
-            <span class="btn-icon sparkle">🔥</span> Создать аккаунт
+<div class="grid">
+    <!-- Simple Dish 1 -->
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop" class="card-image" alt="Паста">
+        <h3 class="card-title">{% trans "Паста с помидорами" %}</h3>
+        <p class="card-desc">{% trans "Быстрый и вкусный рецепт пасты с томатным соусом, готовый за 20 минут" %}</p>
+        <div class="card-tags">
+            <span class="tag">{% trans "20 мин" %}</span>
+            <span class="tag success">{% trans "Легко" %}</span>
+        </div>
+        <a href="https://www.youtube.com/watch?v=3oA-cfVwSg" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">
+            <i class="ti ti-brand-youtube"></i> {% trans "Смотреть видео на YouTube" %}
         </a>
-    {% endif %}
-</section>
- 
-<div class="dashboard-grid">
-    <div class="dashboard-card glass-panel reveal">
-        <span class="card-icon icon-bounce">✍️</span>
-        <h3>Поиск по продуктам</h3>
-        <p>Введите ингредиенты — ИИ предложит 3 варианта блюд с рецептом и видео.</p>
-        <a href="{% url 'recipe_search' %}" class="btn btn-primary btn-glow">Ввести ингредиенты</a>
     </div>
- 
-    <div class="dashboard-card glass-panel reveal">
-        <span class="card-icon icon-bounce">📸</span>
-        <h3>Сканировать по фото</h3>
-        <p>Загрузите фото холодильника — YOLO распознает продукты, AI составит меню.</p>
-        <a href="{% url 'image_search' %}" class="btn btn-secondary btn-glow">Сканировать фото</a>
+    <!-- Simple Dish 2 -->
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop" class="card-image" alt="Омлет">
+        <h3 class="card-title">{% trans "Омлет с овощами" %}</h3>
+        <p class="card-desc">{% trans "Сытный и полезный омлет с овощами, идеально для завтрака" %}</p>
+        <div class="card-tags">
+            <span class="tag">{% trans "15 мин" %}</span>
+            <span class="tag success">{% trans "Легко" %}</span>
+        </div>
+        <a href="https://www.youtube.com/watch?v=oR8W_2lK8" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">
+            <i class="ti ti-brand-youtube"></i> {% trans "Смотреть видео на YouTube" %}
+        </a>
+    </div>
+    <!-- Simple Dish 3 -->
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=400&fit=crop" class="card-image" alt="Салат">
+        <h3 class="card-title">{% trans "Греческий салат" %}</h3>
+        <p class="card-desc">{% trans "Свежий овощной салат с сыром фета и оливковым маслом" %}</p>
+        <div class="card-tags">
+            <span class="tag">{% trans "10 мин" %}</span>
+            <span class="tag success">{% trans "Легко" %}</span>
+        </div>
+        <a href="https://www.youtube.com/watch?v=6e6gOaXc" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">
+            <i class="ti ti-brand-youtube"></i> {% trans "Смотреть видео на YouTube" %}
+        </a>
     </div>
 </div>
-{% endblock %}
- 
-{% block extra_js %}
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const link = document.getElementById("nav-home");
-        if (link) link.classList.add("active");
-    });
-</script>
+
+<div style="margin-top:40px;">
+    <h2 style="font-family:'Poppins',sans-serif; font-size:28px; font-weight:700; margin-bottom:24px;">
+        {% trans "Как использовать" %}
+    </h2>
+    <div class="grid">
+        <div class="card">
+            <div style="display:flex; gap:16px; align-items:flex-start;">
+                <div style="width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg,var(--primary),#ec4899); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="ti ti-pencil" style="font-size:28px; color:white;"></i>
+                </div>
+                <div>
+                    <h3 style="font-family:'Poppins',sans-serif; font-size:18px; margin-bottom:4px;">{% trans "Текст ингредиентов" %}</h3>
+                    <p style="color:var(--text-muted); font-size:14px; line-height:1.6;">
+                        {% trans "Напиши продукты, которые у тебя есть, и AI предложит рецепты" %}
+                    </p>
+                </div>
+            </div>
+            <div style="margin-top:20px;">
+                <a href="{% url 'recipe_search' %}" class="btn btn-secondary btn-full">
+                    <i class="ti ti-arrow-right"></i> {% trans "Перейти" %}
+                </a>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display:flex; gap:16px; align-items:flex-start;">
+                <div style="width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg,var(--secondary),#06b6d4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="ti ti-camera" style="font-size:28px; color:white;"></i>
+                </div>
+                <div>
+                    <h3 style="font-family:'Poppins',sans-serif; font-size:18px; margin-bottom:4px;">{% trans "Сканировать фото" %}</h3>
+                    <p style="color:var(--text-muted); font-size:14px; line-height:1.6;">
+                        {% trans "Загрузи фото холодильника или продуктов - AI распознает их" %}
+                    </p>
+                </div>
+            </div>
+            <div style="margin-top:20px;">
+                <a href="{% url 'image_search' %}" class="btn btn-secondary btn-full">
+                    <i class="ti ti-arrow-right"></i> {% trans "Перейти" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

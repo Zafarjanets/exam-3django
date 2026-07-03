@@ -1,160 +1,152 @@
-{% extends 'base.html' %}
- 
-{% block title %}Распознавание по фото | AI Recipe Assistant{% endblock %}
- 
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Сканировать фото" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "Сканировать фото" %}{% endblock %}
+
 {% block content %}
-<section class="page-hero reveal">
-    <span class="page-hero-icon icon-bounce">📸</span>
-    <h1 class="gradient-title">Анализ по фото</h1>
-    <p>YOLO распознает продукты — AI предложит варианты блюд</p>
-</section>
- 
-<div class="form-card glass-panel reveal">
+<div class="card" style="max-width:800px;">
     {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
+    <div style="background: rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#ef4444; padding:14px 18px; border-radius:12px; margin-bottom:20px; display:flex; gap:10px; align-items:center;">
+        <i class="ti ti-alert-circle" style="font-size:20px;"></i>
+        {{ error }}
+    </div>
     {% endif %}
- 
-    <form method="POST" enctype="multipart/form-data" id="image-form">
+
+    <form method="POST" enctype="multipart/form-data" id="imageForm">
         {% csrf_token %}
-        <div class="form-group image-form-center">
-            <label for="image-input" class="upload-dropzone" id="dropzone">
-                <div class="upload-icon icon-bounce">📸</div>
-                <h4>Выберите файл изображения</h4>
-                <p id="file-name">JPG, PNG, WEBP</p>
-                <input type="file" id="image-input" name="image" accept="image/*" class="visually-hidden-input" required>
+        <div class="form-group">
+            <label class="form-label">{% trans "Загрузи фото" %}</label>
+            <label for="imageInput" class="upload-zone">
+                <i class="ti ti-cloud-upload"></i>
+                <h4 style="font-family:'Poppins',sans-serif; font-size:18px; margin-bottom:8px;">{% trans "Нажми или перетащи фото" %}</h4>
+                <p>{% trans "JPG, PNG, WEBP" %}</p>
             </label>
+            <input type="file" id="imageInput" name="image" accept="image/*" required style="display:none;">
         </div>
-        <button type="submit" class="btn btn-secondary btn-glow full-width-btn" id="submit-btn">
-            <span class="btn-icon">🚀</span> Запустить анализ
+
+        {% if result or detected_ingredients_json %}
+        <div class="form-group">
+            <label class="form-label">{% trans "Распознанные ингредиенты (можно добавить свои!)" %}</label>
+            <div class="ingredients-list" id="ingredientsList">
+                <!-- Chips will be added here -->
+            </div>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <input type="text" id="addIngredientInput" class="form-input" placeholder="{% trans 'Добавить ингредиент...' %}" style="flex:1;">
+                <button type="button" class="btn btn-primary" onclick="addIngredient()">
+                    <i class="ti ti-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <input type="hidden" id="ingredientsHidden" name="manual_ingredients">
+        <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+            <i class="ti ti-magic"></i>
+            {% trans "Получить рецепты" %}
         </button>
+        {% else %}
+        <button type="submit" class="btn btn-primary btn-full">
+            <i class="ti ti-cpu"></i>
+            {% trans "Распознать продукты" %}
+        </button>
+        {% endif %}
     </form>
-</div>
- 
-<div id="loader-overlay" class="loader-overlay glass-panel hidden">
-    <div class="loader-rings"></div>
-    <div class="loader-icon spin-icon">🔬</div>
-    <h3>Нейросеть анализирует фото...</h3>
-    <p>YOLO + Groq AI — подождите немного</p>
-</div>
- 
-{% if result %}
-<section class="reveal results-margin-top">
-    <div class="recipe-detail-grid">
-        <div class="glass-panel image-preview-panel">
-            <div class="panel-header">
-                <span class="panel-icon icon-bounce">🖼️</span>
-                <h3>Ваше фото</h3>
-            </div>
-            <img src="{{ result.image.url }}" alt="Загруженное фото" class="preview-image">
-        </div>
-        <div class="glass-panel">
-            <div class="panel-header">
-                <span class="panel-icon icon-bounce">🔍</span>
-                <h3>Распознанные продукты</h3>
-            </div>
-            <div id="badge-wrapper" class="recipe-badges ingredients-grid"></div>
-            {% if detected_ingredients_json %}
-                {{ detected_ingredients_json|json_script:"detected-ingredients-json" }}
-            {% endif %}
-        </div>
+
+    {% if result %}
+    <div style="margin-top:32px;">
+        <img src="{{ result.image.url }}" style="width:100%; border-radius:16px; margin-bottom:24px;">
     </div>
-</section>
- 
+    {% endif %}
+</div>
+
 {% if dishes %}
-<section class="results-section reveal">
-    <div class="section-header centered">
-        <span class="section-icon sparkle">✨</span>
-        <div>
-            <h2>ИИ предложил {{ dishes|length }} варианта</h2>
-            <p>Нажмите на блюдо — рецепт, видео и избранное</p>
+<div style="margin-top:40px;">
+    <h2 style="font-family:'Poppins',sans-serif; font-size:28px; font-weight:700; margin-bottom:24px;">
+        {% trans "Предложенные рецепты" %}
+    </h2>
+    <div class="grid" id="dishesGrid">
+        {% for dish in dishes %}
+        <div class="card">
+            <img src="https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=400&fit=crop" class="card-image" alt="{{ dish.title }}">
+            <h3 class="card-title">{{ dish.title }}</h3>
+            <p class="card-desc">{{ dish.summary }}</p>
+            <div class="card-tags">
+                {% if dish.cooking_time %}
+                <span class="tag">{{ dish.cooking_time }} {% trans "мин" %}</span>
+                {% endif %}
+                {% if dish.difficulty %}
+                <span class="tag success">{{ dish.difficulty }}</span>
+                {% endif %}
+            </div>
+            <div style="display:flex; gap:8px;">
+                <a href="{% url 'ai_dish_detail' dish.id %}" class="btn btn-primary btn-full">
+                    <i class="ti ti-book"></i> {% trans "Смотреть рецепт" %}
+                </a>
+            </div>
         </div>
+        {% endfor %}
     </div>
-    <div id="dishes-grid" class="dish-options-grid"></div>
-    {{ dishes_json|json_script:"dishes-json" }}
-</section>
+</div>
 {% endif %}
-{% endif %}
+
 {% endblock %}
- 
+
 {% block extra_js %}
 <script>
-(function () {
-    function readJSON(id) {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        try { return JSON.parse(el.textContent); }
-        catch (e) { console.error("Ошибка JSON #" + id, e); return null; }
+    let ingredients = [];
+
+    // Load ingredients from JSON if available
+    {% if detected_ingredients_json %}
+        ingredients = {{ detected_ingredients_json|safe }};
+    {% endif %}
+
+    function renderIngredients() {
+        const container = document.getElementById('ingredientsList');
+        if (!container) return;
+        container.innerHTML = ingredients.map((ing, idx) => `
+            <div class="ingredient-chip" id="chip-${idx}">
+                <span>${ing}</span>
+                <button type="button" onclick="removeIngredient(${idx})">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+        `).join('');
+        document.getElementById('ingredientsHidden').value = JSON.stringify(ingredients);
     }
- 
-    function escapeHTML(str) {
-        const div = document.createElement("div");
-        div.textContent = String(str);
-        return div.innerHTML;
-    }
- 
-    function renderDetectedIngredients() {
-        const data = readJSON("detected-ingredients-json");
-        const container = document.getElementById("badge-wrapper");
-        if (!data || !container) return;
-        container.innerHTML = "";
-        data.forEach((name, i) => {
-            const span = document.createElement("span");
-            span.className = "badge badge-ingredients ingredient-pop";
-            span.style.animationDelay = `${i * 0.04}s`;
-            span.innerHTML = `<span class="badge-icon">•</span> ${escapeHTML(name)}`;
-            container.appendChild(span);
-        });
-    }
- 
-    function renderDishCards() {
-        const data = readJSON("dishes-json");
-        const container = document.getElementById("dishes-grid");
-        if (!data || !container) return;
-        container.innerHTML = "";
-        data.forEach((dish) => {
-            const url = dish.url || dish.detail_url || (dish.id ? `/dish/${dish.id}/` : "#");
-            const card = document.createElement("a");
-            card.className = "dish-option-card";
-            card.href = url;
-            card.innerHTML = `
-                <div class="dish-option-title">${escapeHTML(dish.title || "Без названия")}</div>
-                <div class="dish-option-summary">${escapeHTML(dish.summary || dish.description || "")}</div>
-                <div class="recipe-badges">
-                    ${dish.cooking_time ? `<span class="badge"><span class="badge-icon">⏱</span> ${escapeHTML(dish.cooking_time)} мин</span>` : ""}
-                    ${dish.difficulty ? `<span class="badge badge-success">${escapeHTML(dish.difficulty)}</span>` : ""}
-                </div>`;
-            container.appendChild(card);
-        });
-    }
- 
-    function wireImageUpload() {
-        const input = document.getElementById("image-input");
-        const fileName = document.getElementById("file-name");
-        const form = document.getElementById("image-form");
-        const submitBtn = document.getElementById("submit-btn");
-        const loader = document.getElementById("loader-overlay");
- 
-        if (input && fileName) {
-            input.addEventListener("change", () => {
-                fileName.textContent = input.files.length ? input.files[0].name : "JPG, PNG, WEBP";
-            });
-        }
-        if (form && submitBtn) {
-            form.addEventListener("submit", () => {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="btn-loading"><span class="spin-icon">⟳</span> Анализ изображения...</span>';
-                if (loader) loader.classList.remove("hidden");
-            });
+
+    function addIngredient() {
+        const input = document.getElementById('addIngredientInput');
+        if (input.value.trim()) {
+            ingredients.push(input.value.trim());
+            input.value = '';
+            renderIngredients();
         }
     }
- 
-    document.addEventListener("DOMContentLoaded", () => {
-        renderDetectedIngredients();
-        renderDishCards();
-        wireImageUpload();
-        const link = document.getElementById("nav-image");
-        if (link) link.classList.add("active");
+
+    function removeIngredient(idx) {
+        ingredients.splice(idx, 1);
+        renderIngredients();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        renderIngredients();
+        const input = document.getElementById('addIngredientInput');
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addIngredient();
+                }
+            });
+        }
     });
-})();
+
+    // File input preview
+    document.getElementById('imageInput')?.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            console.log('File selected:', e.target.files[0].name);
+        }
+    });
 </script>
 {% endblock %}

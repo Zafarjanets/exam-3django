@@ -1,59 +1,46 @@
-{% extends 'base.html' %}
- 
-{% block title %}Профиль | AI Recipe Assistant{% endblock %}
- 
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Профиль" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "Профиль" %}{% endblock %}
+
 {% block content %}
-<div class="profile-card glass-panel reveal">
-    <div class="profile-avatar">
-        <span class="icon-bounce">🍳</span>
-        <span class="profile-avatar-ring"></span>
+<div class="card" style="text-align:center; padding:40px;">
+    <div style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg,var(--primary),#ec4899); display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+        <i class="ti ti-user" style="font-size:56px; color:white;"></i>
     </div>
- 
-    <div class="profile-username gradient-title" style="font-size: 28px;">{{ user.username }}</div>
-    <div class="profile-email">📧 {{ user.email }}</div>
- 
-    <div class="profile-stats">
-        <div class="stat-item">
-            <div class="stat-value" data-count="{{ favorites_count }}">0</div>
-            <div class="stat-label">❤️ Избранное</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value" data-count="{{ history_count }}">0</div>
-            <div class="stat-label">📜 Запросы</div>
+    <h3 style="font-family:'Poppins',sans-serif; font-size:28px; margin-bottom:8px;">
+        {{ user.get_full_name|default:user.username }}
+    </h3>
+    <p style="color:var(--text-muted);">{{ user.email }}</p>
+</div>
+
+<div class="grid" style="margin-top:24px;">
+    <div class="card">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <div style="width:64px; height:64px; border-radius:16px; background:rgba(124,58,237,0.15); display:flex; align-items:center; justify-content:center;">
+                <i class="ti ti-heart" style="font-size:32px; color:var(--primary);"></i>
+            </div>
+            <div>
+                <div style="font-size:36px; font-family:'Poppins',sans-serif; font-weight:700;">
+                    {{ favorites_count }}
+                </div>
+                <div style="color:var(--text-muted); font-weight:500;">{% trans "Избранное" %}</div>
+            </div>
         </div>
     </div>
- 
-    <div class="profile-actions">
-        <a href="{% url 'favorites' %}" class="btn btn-primary btn-glow">⭐ В избранное</a>
-        <a href="{% url 'history' %}" class="btn btn-outline">📜 История</a>
-        <a href="{% url 'logout' %}" class="btn btn-danger">🚪 Выйти</a>
+    <div class="card">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <div style="width:64px; height:64px; border-radius:16px; background:rgba(16,185,129,0.15); display:flex; align-items:center; justify-content:center;">
+                <i class="ti ti-history" style="font-size:32px; color:var(--secondary);"></i>
+            </div>
+            <div>
+                <div style="font-size:36px; font-family:'Poppins',sans-serif; font-weight:700;">
+                    {{ history_count }}
+                </div>
+                <div style="color:var(--text-muted); font-weight:500;">{% trans "История запросов" %}</div>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
- 
-{% block extra_js %}
-<script>
-(function () {
-    function animateCounters() {
-        document.querySelectorAll(".stat-value[data-count]").forEach((node) => {
-            const target = parseInt(node.dataset.count, 10) || 0;
-            const duration = 700;
-            const start = performance.now();
-            function tick(now) {
-                const progress = Math.min((now - start) / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                node.textContent = Math.round(eased * target);
-                if (progress < 1) requestAnimationFrame(tick);
-            }
-            requestAnimationFrame(tick);
-        });
-    }
- 
-    document.addEventListener("DOMContentLoaded", () => {
-        animateCounters();
-        const link = document.getElementById("nav-profile");
-        if (link) link.classList.add("active");
-    });
-})();
-</script>
 {% endblock %}

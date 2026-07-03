@@ -1,96 +1,76 @@
 {% extends "base.html" %}
- 
-{% block title %}История запросов | AI Recipe Assistant{% endblock %}
- 
+{% load i18n %}
+
+{% block title %}{% trans "История" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "История" %}{% endblock %}
+
 {% block content %}
-<h2 class="history-page-title">📜 История ваших AI запросов</h2>
- 
 {% if items %}
-    <div class="history-timeline">
-        {% for item in items %}
-            <div class="history-card glass-panel">
-                <div class="history-img-wrapper">
+<div style="margin-bottom:20px; display:flex; justify-content:flex-end;">
+    <form method="POST" action="{% url 'clear_history' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" onclick="return confirm('{% trans "Вы уверены, что хотите очистить историю?" %}');">
+            <i class="ti ti-trash"></i>
+            {% trans "Очистить историю" %}
+        </button>
+    </form>
+</div>
+<div style="display:flex; flex-direction:column; gap:16px;">
+    {% for item in items %}
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;">
+            <div>
+                <h4 style="font-size:18px; font-weight:700; margin-bottom:8px;">
                     {% if item.image %}
-                        <img src="{{ item.image.url }}" alt="Запрос от {{ item.created_at }}">
+                    <i class="ti ti-camera" style="color:var(--primary); margin-right:8px;"></i>
+                    {% trans "Фото" %}
                     {% else %}
-                        <div class="history-empty-icon-fallback">📝</div>
+                    <i class="ti ti-text" style="color:var(--secondary); margin-right:8px;"></i>
+                    {% trans "Текст" %}
                     {% endif %}
+                </h4>
+                <p style="color:var(--text-muted); font-size:14px;">{{ item.created_at|date:"d.m.Y H:i" }}</p>
+                {% if item.detected_ingredients %}
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+                    {% for ing in item.detected_ingredients.split|slice:":6" %}
+                    <span class="tag">{{ ing }}</span>
+                    {% endfor %}
                 </div>
- 
-                <div class="history-details">
-                    <div class="history-meta">
-                        📅 <b>Дата запроса:</b> {{ item.created_at|date:"d E Y H:i" }}
-                    </div>
- 
-                    <div class="history-ingredients-block">
-                        <h4 class="history-ingredients-title">🔍 Ингредиенты:</h4>
-                        <div class="recipe-badges history-badges-list" data-ingredients="{{ item.detected_ingredients|default:item.ingredients_text }}"></div>
-                    </div>
- 
-                    {% if item.dishes.all %}
-                        <h4 class="history-dishes-title">🍽️ Варианты блюд:</h4>
-                        <div class="history-dish-links">
-                            {% for dish in item.dishes.all %}
-                                <a href="{% url 'ai_dish_detail' dish.id %}" class="history-dish-link">
-                                    {{ dish.title }}
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <pre class="recipe-body history-ai-response">{{ item.ai_response }}</pre>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="glass-panel empty-state-panel">
-        <span class="empty-state-icon">📜</span>
-        <h3>История пуста</h3>
-        <p class="empty-state-text">
-            Вы ещё не искали рецепты по ингредиентам или фото.
-        </p>
-        <div class="empty-state-actions">
-            <a href="{% url 'recipe_search' %}" class="btn btn-primary">Поиск по тексту</a>
-            <a href="{% url 'image_search' %}" class="btn btn-secondary">Загрузить фото</a>
+            {% if item.dishes.exists %}
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span style="color:var(--text-muted); font-size:14px;">
+                    <i class="ti ti-book" style="margin-right:4px;"></i>
+                    {{ item.dishes.count }} {% trans "рецептов" %}
+                </span>
+            </div>
+            {% endif %}
         </div>
+
+        {% if item.dishes.exists %}
+        <div class="grid" style="margin-top:20px; grid-template-columns: repeat(auto-fit,minmax(200px,1fr));">
+            {% for dish in item.dishes.all %}
+            <div style="background:var(--bg-hover); border-radius:12px; padding:16px;">
+                <h5 style="font-weight:700; margin-bottom:4px;">{{ dish.title }}</h5>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">{{ dish.summary|truncatechars:60 }}</p>
+                <a href="{% url 'ai_dish_detail' dish.id %}" class="btn btn-secondary btn-full" style="font-size:13px;">
+                    {% trans "Открыть" %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:60px 24px;">
+    <div style="width:100px; height:100px; border-radius:50%; background:var(--bg-hover); display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+        <i class="ti ti-history" style="font-size:48px; color:var(--text-muted);"></i>
+    </div>
+    <h3 style="font-family:'Poppins',sans-serif; font-size:22px; margin-bottom:8px;">{% trans "Пока пусто" %}</h3>
+    <p style="color:var(--text-muted);">{% trans "Твоя история появится здесь" %}</p>
+</div>
 {% endif %}
-{% endblock %}
- 
-{% block extra_js %}
-<script>
-(function () {
-    function escapeHTML(str) {
-        const div = document.createElement("div");
-        div.textContent = String(str);
-        return div.innerHTML;
-    }
- 
-    function renderHistoryBadges() {
-        document.querySelectorAll(".history-badges-list").forEach((container) => {
-            const raw = container.dataset.ingredients;
-            if (!raw) return;
-            let list;
-            try { list = JSON.parse(raw); }
-            catch (e) { list = raw.split(",").map((s) => s.trim()).filter(Boolean); }
- 
-            container.innerHTML = "";
-            list.forEach((name, i) => {
-                const span = document.createElement("span");
-                span.className = "badge badge-ingredients ingredient-pop";
-                span.style.animationDelay = `${i * 0.04}s`;
-                span.innerHTML = `<span class="badge-icon">•</span> ${escapeHTML(name)}`;
-                container.appendChild(span);
-            });
-        });
-    }
- 
-    document.addEventListener("DOMContentLoaded", () => {
-        renderHistoryBadges();
-        const link = document.getElementById("nav-history");
-        if (link) link.classList.add("active");
-    });
-})();
-</script>
 {% endblock %}

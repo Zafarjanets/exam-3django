@@ -1,2115 +1,360 @@
+{% load static %}
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ request.LANGUAGE_CODE|default:'ru' }}">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FridgeMaster — AI Fridge Assistant</title>
-<meta name="description" content="FridgeMaster — умный AI-ассистент для вашего холодильника. Распознавайте продукты и получайте персонализированные рецепты.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-
-<style>
-/* ==================== RESET & TOKENS ==================== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  /* — Background layers — */
-  --bg-base:    #050810;
-  --bg-surface: #0a0e1a;
-  --bg-card:    rgba(12, 17, 30, 0.85);
-  --bg-card2:   rgba(18, 24, 40, 0.7);
-  --bg-hover:   rgba(255,255,255,0.04);
-  --bg-input:   rgba(255,255,255,0.05);
-
-  /* — Accent palette — */
-  --accent:       #6366f1;
-  --accent-light: #818cf8;
-  --accent-glow:  rgba(99,102,241,0.35);
-  --accent-soft:  rgba(99,102,241,0.12);
-  --accent-mid:   rgba(99,102,241,0.22);
-
-  --emerald:      #10b981;
-  --emerald-soft: rgba(16,185,129,0.12);
-  --emerald-glow: rgba(16,185,129,0.3);
-
-  --violet:       #8b5cf6;
-  --violet-soft:  rgba(139,92,246,0.12);
-
-  --sky:          #38bdf8;
-  --sky-soft:     rgba(56,189,248,0.1);
-
-  --amber:        #f59e0b;
-  --amber-soft:   rgba(245,158,11,0.1);
-  --rose:         #f43f5e;
-  --rose-soft:    rgba(244,63,94,0.1);
-
-  /* — Text — */
-  --txt:    #e8eaf6;
-  --txt-2:  #9197b3;
-  --txt-3:  #5c6280;
-  --txt-4:  #363c58;
-
-  /* — Borders — */
-  --bd:    rgba(255,255,255,0.06);
-  --bd-2:  rgba(255,255,255,0.10);
-  --bd-3:  rgba(255,255,255,0.15);
-  --bd-accent: rgba(99,102,241,0.35);
-
-  /* — Radii — */
-  --r-xs: 6px;
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
-  --r-full: 9999px;
-
-  /* — Shadows — */
-  --shadow-sm: 0 2px 12px rgba(0,0,0,0.35);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.5);
-  --shadow-lg: 0 16px 56px rgba(0,0,0,0.65);
-  --shadow-glow: 0 0 32px rgba(99,102,241,0.2);
-
-  /* — Transitions — */
-  --t-fast: 0.15s cubic-bezier(.4,0,.2,1);
-  --t-base: 0.22s cubic-bezier(.4,0,.2,1);
-  --t-slow: 0.35s cubic-bezier(.4,0,.2,1);
-}
-
-html, body {
-  height: 100%;
-  background: var(--bg-base);
-  color: var(--txt);
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 13.5px;
-  line-height: 1.55;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ==================== CUSTOM SCROLLBAR ==================== */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.55); }
-
-/* ==================== ANIMATED BACKGROUND ==================== */
-.bg-canvas {
-  position: fixed; inset: 0; z-index: 0;
-  pointer-events: none; overflow: hidden;
-}
-.bg-grid {
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
-}
-.orb {
-  position: absolute; border-radius: 50%;
-  filter: blur(100px); mix-blend-mode: screen;
-  animation: orbDrift ease-in-out infinite;
-}
-.orb-1 {
-  top: -15%; right: -10%; width: 580px; height: 580px;
-  background: radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%);
-  animation-duration: 14s;
-}
-.orb-2 {
-  bottom: -15%; left: -12%; width: 620px; height: 620px;
-  background: radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%);
-  animation-duration: 18s; animation-direction: reverse;
-}
-.orb-3 {
-  top: 30%; left: 40%; width: 380px; height: 380px;
-  background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
-  animation-duration: 22s; animation-delay: -4s;
-}
-.orb-4 {
-  top: 60%; right: 20%; width: 260px; height: 260px;
-  background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
-  animation-duration: 16s; animation-delay: -8s;
-}
-
-@keyframes orbDrift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(40px, -35px) scale(1.07); }
-  66%       { transform: translate(-25px, 20px) scale(0.96); }
-}
-
-/* ==================== NOISE TEXTURE ==================== */
-.bg-canvas::after {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
-  opacity: 0.4; pointer-events: none;
-}
-
-/* ==================== LAYOUT ==================== */
-.app {
-  position: relative; z-index: 1;
-  display: flex; height: 100vh; overflow: hidden;
-}
-
-/* ==================== SIDEBAR ==================== */
-.sidebar {
-  width: 240px; min-width: 240px;
-  background: linear-gradient(180deg, rgba(10,12,25,0.97) 0%, rgba(8,10,20,0.97) 100%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border-right: 1px solid var(--bd);
-  display: flex; flex-direction: column;
-  position: relative; z-index: 20;
-  transition: width var(--t-slow);
-}
-.sidebar::before {
-  content: '';
-  position: absolute; top: 0; right: 0; width: 1px; height: 100%;
-  background: linear-gradient(180deg, transparent, rgba(99,102,241,0.4), rgba(16,185,129,0.2), transparent);
-}
-
-/* Logo */
-.sidebar-logo {
-  display: flex; align-items: center; gap: 13px;
-  padding: 22px 18px 18px;
-  border-bottom: 1px solid var(--bd);
-}
-.logo-mark {
-  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--violet) 100%);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 16px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-  position: relative; overflow: hidden;
-}
-.logo-mark::after {
-  content: '';
-  position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
-  animation: shimmer 3s ease-in-out infinite;
-}
-@keyframes shimmer {
-  0%, 100% { transform: translateX(-100%) translateY(-100%); }
-  50%       { transform: translateX(100%) translateY(100%); }
-}
-.logo-mark i { color: #fff; font-size: 20px; position: relative; z-index: 1; }
-.logo-name {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 17px; font-weight: 700; color: var(--txt);
-  letter-spacing: -0.4px;
-}
-.logo-ver {
-  font-size: 10px; color: var(--txt-3); margin-top: -2px;
-  display: flex; align-items: center; gap: 4px;
-}
-.logo-ver span {
-  background: linear-gradient(90deg, var(--accent-light), var(--emerald));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  font-weight: 600;
-}
-
-/* User block */
-.sidebar-user {
-  display: flex; align-items: center; gap: 11px;
-  padding: 14px 16px; border-bottom: 1px solid var(--bd);
-  cursor: pointer;
-  transition: background var(--t-fast);
-}
-.sidebar-user:hover { background: var(--bg-hover); }
-.user-avatar {
-  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: #fff;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.3), 0 0 12px rgba(99,102,241,0.2);
-  letter-spacing: 0.5px;
-}
-.user-details { flex: 1; min-width: 0; }
-.user-name {
-  font-size: 13px; font-weight: 600; color: var(--txt);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.user-sub {
-  font-size: 10.5px; color: var(--txt-3);
-  display: flex; align-items: center; gap: 4px; margin-top: 1px;
-}
-.user-sub i { font-size: 10px; color: var(--emerald); }
-.user-online-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--emerald);
-  box-shadow: 0 0 6px var(--emerald);
-  animation: pulse-dot 2.5s ease-in-out infinite;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.6; transform: scale(0.8); }
-}
-
-/* Nav */
-.sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
-
-.nav-section-label {
-  font-size: 9.5px; font-weight: 700; color: var(--txt-4);
-  text-transform: uppercase; letter-spacing: 0.12em;
-  padding: 14px 10px 6px;
-}
-
-.nav-item {
-  display: flex; align-items: center; gap: 11px;
-  padding: 10px 12px; border-radius: var(--r-sm);
-  cursor: pointer; color: var(--txt-3); font-size: 13px; font-weight: 500;
-  transition: all var(--t-fast); border: 1px solid transparent;
-  text-decoration: none; position: relative; overflow: hidden;
-  user-select: none;
-}
-.nav-item::before {
-  content: '';
-  position: absolute; inset: 0; opacity: 0;
-  background: linear-gradient(90deg, rgba(99,102,241,0.08) 0%, transparent 100%);
-  transition: opacity var(--t-fast);
-}
-.nav-item:hover { color: var(--txt); background: var(--bg-hover); }
-.nav-item:hover::before { opacity: 1; }
-.nav-item.active {
-  background: var(--accent-soft); color: var(--accent-light);
-  border-color: var(--bd-accent);
-}
-.nav-item.active::before { opacity: 1; }
-.nav-item.active .nav-indicator {
-  position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 3px; border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, var(--accent), var(--violet));
-  box-shadow: 0 0 8px var(--accent-glow);
-}
-.nav-item i { font-size: 17px; width: 20px; text-align: center; flex-shrink: 0; transition: transform var(--t-fast); }
-.nav-item:hover i { transform: scale(1.1); }
-.nav-item span.label { flex: 1; }
-.nav-badge {
-  margin-left: auto;
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  color: #fff; font-size: 9.5px; font-weight: 700;
-  padding: 2px 7px; border-radius: var(--r-full);
-  min-width: 18px; text-align: center;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.4);
-}
-
-/* Footer */
-.sidebar-footer {
-  padding: 10px; border-top: 1px solid var(--bd);
-}
-.sidebar-footer a {
-  display: flex; align-items: center; gap: 11px;
-  padding: 10px 12px; border-radius: var(--r-sm);
-  cursor: pointer; color: var(--txt-3); font-size: 13px; font-weight: 500;
-  transition: all var(--t-fast); border: 1px solid transparent;
-  text-decoration: none;
-}
-.sidebar-footer a:hover {
-  background: var(--rose-soft); color: var(--rose);
-  border-color: rgba(244,63,94,0.15);
-}
-.sidebar-footer a i { font-size: 17px; }
-
-/* ==================== MAIN PANEL ==================== */
-.main {
-  flex: 1; display: flex; flex-direction: column;
-  min-width: 0; overflow: hidden;
-}
-
-/* Topbar */
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 26px; height: 58px;
-  background: rgba(5,8,16,0.85);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--bd);
-  flex-shrink: 0; gap: 16px;
-}
-.topbar-left { display: flex; align-items: center; gap: 14px; }
-.topbar-page-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px; font-weight: 700; color: var(--txt);
-  letter-spacing: -0.3px;
-}
-.topbar-breadcrumb {
-  font-size: 11.5px; color: var(--txt-3);
-  display: flex; align-items: center; gap: 5px;
-}
-.topbar-breadcrumb i { font-size: 14px; }
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-
-/* Search bar */
-.topbar-search {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--bg-input); border: 1px solid var(--bd-2);
-  border-radius: var(--r-full); padding: 7px 14px;
-  transition: all var(--t-base); min-width: 200px;
-}
-.topbar-search:focus-within {
-  border-color: var(--bd-accent); background: var(--accent-soft);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-}
-.topbar-search i { color: var(--txt-3); font-size: 15px; }
-.topbar-search input {
-  background: none; border: none; outline: none;
-  color: var(--txt); font-size: 12.5px; font-family: inherit; width: 100%;
-}
-.topbar-search input::placeholder { color: var(--txt-4); }
-
-.icon-btn {
-  width: 36px; height: 36px; border-radius: var(--r-sm);
-  background: var(--bg-input); border: 1px solid var(--bd-2);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--txt-2); transition: all var(--t-fast);
-  position: relative;
-}
-.icon-btn:hover {
-  border-color: var(--bd-accent); color: var(--accent-light);
-  background: var(--accent-soft);
-  box-shadow: 0 0 12px rgba(99,102,241,0.15);
-}
-.icon-btn i { font-size: 17px; }
-.icon-btn .notif-dot {
-  position: absolute; top: 7px; right: 7px;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--rose); border: 1.5px solid var(--bg-base);
-}
-
-.topbar-avatar {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), #a78bfa);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
-  transition: box-shadow var(--t-fast);
-}
-.topbar-avatar:hover { box-shadow: 0 0 0 3px rgba(99,102,241,0.5); }
-
-/* Status bar */
-.status-bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 26px;
-  background: rgba(5,8,16,0.5);
-  border-bottom: 1px solid var(--bd);
-  flex-shrink: 0; overflow: hidden;
-}
-.status-chip {
-  display: flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: var(--r-full);
-  font-size: 10.5px; font-weight: 500;
-  border: 1px solid; white-space: nowrap;
-}
-.status-chip.green { background: var(--emerald-soft); border-color: rgba(16,185,129,0.25); color: #34d399; }
-.status-chip.blue  { background: var(--sky-soft); border-color: rgba(56,189,248,0.2); color: var(--sky); }
-.status-chip.purple{ background: var(--accent-soft); border-color: var(--bd-accent); color: var(--accent-light); }
-.status-chip i { font-size: 11px; }
-.status-sep { width: 1px; height: 14px; background: var(--bd-2); margin: 0 4px; }
-
-/* ==================== CONTENT ==================== */
-.content {
-  flex: 1; overflow-y: auto; padding: 22px 26px;
-  display: flex; flex-direction: column; gap: 20px;
-}
-
-/* ==================== PAGE SYSTEM ==================== */
-.page { display: none; flex-direction: column; gap: 20px; animation: pageIn 0.3s ease; }
-.page.active { display: flex; }
-@keyframes pageIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ==================== CARD / GLASS ==================== */
-.glass {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid var(--bd);
-  border-radius: var(--r-md);
-}
-.glass-2 {
-  background: var(--bg-card2);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--bd-2);
-  border-radius: var(--r-md);
-}
-
-/* Panel */
-.panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--bd);
-  border-radius: var(--r-md);
-  padding: 18px 20px;
-}
-.panel-head {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 10.5px; font-weight: 700; color: var(--txt-2);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 14px;
-}
-.panel-head i { font-size: 15px; }
-.panel-head .accent-icon { color: var(--accent-light); }
-
-/* Section headers */
-.sec-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px;
-}
-.sec-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px; font-weight: 600; color: var(--txt);
-  display: flex; align-items: center; gap: 8px;
-  letter-spacing: -0.2px;
-}
-.sec-title i { font-size: 17px; color: var(--accent-light); }
-.sec-link {
-  font-size: 11.5px; color: var(--txt-3); cursor: pointer;
-  display: flex; align-items: center; gap: 3px;
-  transition: color var(--t-fast);
-}
-.sec-link:hover { color: var(--accent-light); }
-.sec-link i { font-size: 13px; }
-
-/* ==================== HOME — TOP ROW ==================== */
-.top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-
-/* Scan upload panel */
-.scan-panel {
-  grid-column: 1 / -1;
-}
-.scan-upload-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-}
-
-/* Dropzone */
-.upload-dropzone {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px; min-height: 180px;
-  border: 1.5px dashed rgba(99,102,241,0.3); border-radius: var(--r-md);
-  background: var(--accent-soft); cursor: pointer;
-  transition: all var(--t-base); position: relative; overflow: hidden;
-}
-.upload-dropzone::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-.upload-dropzone:hover {
-  border-color: rgba(99,102,241,0.6);
-  background: var(--accent-mid);
-  box-shadow: 0 0 24px rgba(99,102,241,0.12);
-}
-.dz-icon-wrap {
-  width: 52px; height: 52px; border-radius: var(--r-md);
-  background: var(--accent-soft); border: 1px solid var(--bd-accent);
-  display: flex; align-items: center; justify-content: center;
-  position: relative; z-index: 1;
-}
-.dz-icon-wrap i { font-size: 24px; color: var(--accent-light); }
-.dz-title {
-  font-size: 13.5px; font-weight: 600; color: var(--txt);
-  position: relative; z-index: 1;
-}
-.dz-hint {
-  font-size: 11px; color: var(--txt-3); position: relative; z-index: 1;
-  text-align: center;
-}
-.dz-badge {
-  position: relative; z-index: 1;
-  display: flex; gap: 6px;
-}
-.dz-badge span {
-  font-size: 10px; padding: 3px 8px; border-radius: var(--r-full);
-  background: rgba(255,255,255,0.06); border: 1px solid var(--bd-2);
-  color: var(--txt-3); font-weight: 500;
-}
-
-/* Photo preview */
-.photo-preview-box {
-  border-radius: var(--r-md); overflow: hidden;
-  position: relative; min-height: 180px;
-  background: var(--bg-surface); border: 1px solid var(--bd-2);
-}
-.photo-preview-box img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-}
-.scan-overlay-new {
-  position: absolute; inset: 0;
-  background: rgba(5,8,16,0.75); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
-}
-.scan-line {
-  position: absolute; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent-light), var(--emerald), transparent);
-  animation: scanMove 1.5s ease-in-out infinite;
-  box-shadow: 0 0 12px rgba(99,102,241,0.8);
-}
-@keyframes scanMove { 0% { top: 8%; } 100% { top: 88%; } }
-.scan-txt-new {
-  font-size: 11.5px; color: var(--accent-light); font-weight: 600;
-  z-index: 1; display: flex; align-items: center; gap: 6px;
-  letter-spacing: 0.04em;
-  animation: blink 1.4s ease-in-out infinite;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
-.scan-txt-new i { animation: spin 1.5s linear infinite; font-size: 14px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.photo-retake-btn {
-  position: absolute; top: 10px; right: 10px;
-  width: 32px; height: 32px; border-radius: var(--r-xs);
-  background: rgba(10,14,26,0.85); border: 1px solid var(--bd-2);
-  color: var(--txt-2); cursor: pointer; font-size: 15px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all var(--t-fast);
-}
-.photo-retake-btn:hover { border-color: var(--bd-accent); color: var(--accent-light); }
-
-/* Scan right panel */
-.scan-right { display: flex; flex-direction: column; gap: 14px; }
-.scan-right-label {
-  font-size: 10.5px; font-weight: 700; color: var(--txt-2);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  display: flex; align-items: center; gap: 7px; margin-bottom: 8px;
-}
-.scan-right-label i { font-size: 14px; color: var(--accent-light); }
-.scan-count-badge {
-  margin-left: auto;
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  color: #fff; font-size: 9.5px; font-weight: 700;
-  padding: 2px 8px; border-radius: var(--r-full);
-}
-
-.scan-recognized-block {
-  background: rgba(99,102,241,0.05); border: 1px solid var(--bd-accent);
-  border-radius: var(--r-sm); padding: 12px 14px;
-}
-.scan-placeholder {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px; background: var(--bg-input); border-radius: var(--r-sm);
-  border: 1px solid var(--bd); color: var(--txt-3); font-size: 12px;
-}
-.scan-placeholder i { font-size: 22px; color: var(--txt-4); flex-shrink: 0; }
-.scan-hint-bar {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--txt-3); margin-top: 8px;
-  padding: 7px 10px; border-radius: var(--r-xs);
-  background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.15);
-}
-.scan-hint-bar i { color: var(--amber); font-size: 13px; flex-shrink: 0; }
-.scan-hint-bar kbd {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 1px 5px; border-radius: 4px;
-  background: rgba(255,255,255,0.07); border: 1px solid var(--bd-2);
-  font-family: inherit; font-size: 10px; color: var(--txt-2);
-}
-
-/* Manual add block */
-.manual-add-block {
-  background: var(--bg-input); border: 1px solid var(--bd-2);
-  border-radius: var(--r-sm); padding: 12px 14px;
-}
-.manual-input-row { display: flex; gap: 8px; align-items: center; }
-.search-box {
-  display: flex; align-items: center; gap: 9px;
-  background: rgba(255,255,255,0.04); border: 1px solid var(--bd-2);
-  border-radius: var(--r-sm); padding: 9px 14px;
-  transition: all var(--t-base);
-}
-.search-box:focus-within {
-  border-color: var(--bd-accent);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-  background: var(--accent-soft);
-}
-.search-box i { color: var(--txt-3); font-size: 15px; flex-shrink: 0; }
-.search-box input {
-  background: none; border: none; outline: none;
-  color: var(--txt); font-size: 12.5px; font-family: inherit; flex: 1;
-}
-.search-box input::placeholder { color: var(--txt-4); }
-
-.add-ingr-btn {
-  width: 38px; height: 38px; border-radius: var(--r-sm); flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  border: none; color: #fff; cursor: pointer; font-size: 17px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all var(--t-fast);
-  box-shadow: 0 4px 12px rgba(99,102,241,0.35);
-}
-.add-ingr-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(99,102,241,0.5); }
-
-/* Chips */
-.chips-wrap { display: flex; flex-wrap: wrap; gap: 7px; }
-.chip {
-  display: flex; align-items: center; gap: 5px;
-  padding: 5px 13px; border-radius: var(--r-full);
-  font-size: 12.5px; font-weight: 500; cursor: pointer;
-  border: 1px solid var(--bd-2); color: var(--txt-2);
-  background: var(--bg-input);
-  transition: all var(--t-fast); user-select: none;
-}
-.chip:hover { border-color: var(--bd-3); color: var(--txt); }
-.chip.sel {
-  background: var(--accent-soft); border-color: var(--bd-accent);
-  color: var(--accent-light);
-}
-.chip i { font-size: 11px; }
-
-/* ==================== DISH CARDS ==================== */
-.dishes-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
-
-.dish-card {
-  background: var(--bg-card2); border: 1px solid var(--bd);
-  border-radius: var(--r-md); overflow: hidden;
-  cursor: pointer; transition: all var(--t-base);
-  position: relative;
-}
-.dish-card::after {
-  content: '';
-  position: absolute; inset: 0; opacity: 0;
-  background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, transparent 100%);
-  transition: opacity var(--t-fast); pointer-events: none;
-}
-.dish-card:hover {
-  border-color: var(--bd-3); transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
-}
-.dish-card:hover::after { opacity: 1; }
-.dish-card.active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(99,102,241,0.2);
-  background: var(--bg-card);
-}
-
-.dish-thumb {
-  height: 80px; display: flex; align-items: center; justify-content: center;
-  font-size: 32px; position: relative; overflow: hidden;
-}
-.dish-thumb-bg {
-  position: absolute; inset: 0; opacity: 0.2;
-  transition: opacity var(--t-fast);
-}
-.dish-card:hover .dish-thumb-bg { opacity: 0.3; }
-.dish-thumb-emoji {
-  position: relative; z-index: 1;
-  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5));
-  transition: transform var(--t-base);
-}
-.dish-card:hover .dish-thumb-emoji { transform: scale(1.12) translateY(-2px); }
-
-.dish-meta { padding: 10px 12px 12px; }
-.dish-name {
-  font-size: 12.5px; font-weight: 600; color: var(--txt);
-  margin-bottom: 5px; line-height: 1.35;
-}
-.dish-stats {
-  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  margin-bottom: 7px;
-}
-.dish-stat {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 10.5px; color: var(--txt-3);
-}
-.dish-stat i { font-size: 11px; }
-.dish-stat.rating { color: var(--amber); }
-
-.match-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 9.5px; font-weight: 700; padding: 2.5px 8px;
-  border-radius: var(--r-full); letter-spacing: 0.02em;
-}
-.match-full {
-  background: var(--emerald-soft); color: #34d399;
-  border: 1px solid rgba(16,185,129,0.25);
-}
-.match-part {
-  background: var(--amber-soft); color: #fbbf24;
-  border: 1px solid rgba(245,158,11,0.2);
-}
-
-/* ==================== DETAIL PANEL ==================== */
-.detail-panel {
-  background: var(--bg-card); border: 1px solid var(--bd);
-  border-radius: var(--r-md); overflow: hidden;
-  display: none;
-}
-.detail-panel.show { display: block; animation: slideInUp .28s cubic-bezier(.4,0,.2,1); }
-@keyframes slideInUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.detail-header {
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 22px; border-bottom: 1px solid var(--bd);
-  background: linear-gradient(90deg, rgba(99,102,241,0.06) 0%, transparent 60%);
-}
-.detail-emoji-box {
-  width: 58px; height: 58px; flex-shrink: 0;
-  background: var(--bg-card2); border: 1px solid var(--bd-2);
-  border-radius: var(--r-md); display: flex; align-items: center;
-  justify-content: center; font-size: 28px;
-}
-.detail-info { flex: 1; min-width: 0; }
-.detail-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 17px; font-weight: 700; color: var(--txt);
-  margin-bottom: 5px; letter-spacing: -0.3px;
-}
-.detail-meta {
-  display: flex; gap: 14px; flex-wrap: wrap;
-  font-size: 11.5px; color: var(--txt-3);
-}
-.detail-meta span { display: flex; align-items: center; gap: 4px; }
-.detail-meta i { font-size: 12px; }
-.detail-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; border-radius: var(--r-sm);
-  font-size: 12px; font-weight: 600; cursor: pointer; border: none;
-  font-family: inherit; transition: all var(--t-fast); letter-spacing: 0.01em;
-}
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.35);
-}
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.5); }
-.btn-ghost {
-  background: var(--bg-input); color: var(--txt-2);
-  border: 1px solid var(--bd-2);
-}
-.btn-ghost:hover { border-color: var(--bd-accent); color: var(--accent-light); background: var(--accent-soft); }
-.btn-icon {
-  width: 36px; height: 36px; padding: 0; justify-content: center;
-}
-.btn i { font-size: 14px; }
-
-.detail-body { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 18px 22px; }
-
-.sub-label {
-  font-size: 10px; font-weight: 700; color: var(--txt-2);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
-}
-.sub-label i { font-size: 13px; color: var(--accent-light); }
-
-.ingr-list { display: flex; flex-wrap: wrap; gap: 7px; }
-.ingr-tag {
-  font-size: 11.5px; padding: 4.5px 11px; border-radius: var(--r-full);
-  background: var(--bg-input); border: 1px solid var(--bd-2);
-  color: var(--txt-2); font-weight: 500;
-}
-.ingr-tag.have {
-  background: var(--emerald-soft); border-color: rgba(16,185,129,0.25);
-  color: #34d399;
-}
-
-.steps-list { display: flex; flex-direction: column; gap: 10px; }
-.step-row { display: flex; gap: 12px; align-items: flex-start; }
-.step-num {
-  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent-soft), var(--violet-soft));
-  border: 1px solid var(--bd-accent);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 9.5px; font-weight: 700; color: var(--accent-light); margin-top: 1px;
-}
-.step-txt { font-size: 12px; color: var(--txt-2); line-height: 1.65; }
-
-/* ==================== FAVORITES ==================== */
-.fav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-.fav-card {
-  background: var(--bg-card2); border: 1px solid var(--bd);
-  border-radius: var(--r-md); padding: 18px;
-  display: flex; gap: 15px; transition: all var(--t-base);
-  position: relative; overflow: hidden;
-}
-.fav-card::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: linear-gradient(180deg, var(--accent), var(--violet));
-  opacity: 0; transition: opacity var(--t-fast);
-}
-.fav-card:hover { border-color: var(--bd-2); transform: translateY(-3px); box-shadow: var(--shadow-md); }
-.fav-card:hover::before { opacity: 1; }
-
-.fav-emoji-box {
-  width: 52px; height: 52px; border-radius: var(--r-sm); flex-shrink: 0;
-  background: var(--bg-input); border: 1px solid var(--bd);
-  display: flex; align-items: center; justify-content: center; font-size: 26px;
-}
-.fav-body { flex: 1; min-width: 0; }
-.fav-name { font-size: 14px; font-weight: 700; color: var(--txt); margin-bottom: 5px; }
-.fav-desc { font-size: 11.5px; color: var(--txt-2); line-height: 1.55; margin-bottom: 10px; }
-.fav-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-.fav-tag {
-  font-size: 10.5px; padding: 3px 9px; border-radius: var(--r-full);
-  background: var(--accent-soft); border: 1px solid var(--bd-accent);
-  color: var(--accent-light); font-weight: 500;
-}
-.fav-actions { display: flex; gap: 8px; }
-.fav-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 14px; border-radius: var(--r-xs);
-  font-size: 11px; font-weight: 600; cursor: pointer; border: none;
-  font-family: inherit; transition: all var(--t-fast);
-}
-.fav-btn.read {
-  background: var(--accent-soft); color: var(--accent-light);
-  border: 1px solid var(--bd-accent);
-}
-.fav-btn.read:hover { background: var(--accent-mid); }
-.fav-btn.del {
-  background: var(--rose-soft); color: var(--rose);
-  border: 1px solid rgba(244,63,94,0.18);
-}
-.fav-btn.del:hover { background: rgba(244,63,94,0.18); }
-.fav-btn i { font-size: 12px; }
-
-/* ==================== HISTORY ==================== */
-.hist-list { display: flex; flex-direction: column; gap: 10px; }
-.hist-card {
-  background: var(--bg-card2); border: 1px solid var(--bd);
-  border-radius: var(--r-md); padding: 15px 18px;
-  display: flex; gap: 14px; align-items: flex-start;
-  cursor: pointer; transition: all var(--t-fast);
-}
-.hist-card:hover { border-color: var(--bd-2); background: var(--bg-card); }
-.hist-icon {
-  width: 46px; height: 46px; border-radius: var(--r-sm); flex-shrink: 0;
-  background: var(--bg-input); border: 1px solid var(--bd);
-  display: flex; align-items: center; justify-content: center; font-size: 22px;
-}
-.hist-body { flex: 1; }
-.hist-date {
-  font-size: 10.5px; color: var(--txt-3); margin-bottom: 4px;
-  display: flex; align-items: center; gap: 5px;
-}
-.hist-date i { font-size: 12px; }
-.hist-ingr { font-size: 12.5px; font-weight: 500; color: var(--txt); margin-bottom: 6px; }
-.hist-method {
-  font-size: 11px; color: var(--txt-3); margin-bottom: 8px;
-  display: flex; align-items: center; gap: 4px;
-}
-.hist-method i { font-size: 12px; }
-.hist-dishes { display: flex; gap: 6px; flex-wrap: wrap; }
-.hist-tag {
-  font-size: 10.5px; color: var(--accent-light);
-  background: var(--accent-soft); border: 1px solid rgba(99,102,241,0.18);
-  border-radius: var(--r-full); padding: 2px 10px; font-weight: 500;
-}
-.hist-arrow { color: var(--txt-4); font-size: 19px; align-self: center; flex-shrink: 0; }
-
-/* ==================== PROFILE ==================== */
-.profile-hero {
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  padding: 36px 24px 28px;
-  background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-md);
-  position: relative; overflow: hidden;
-}
-.profile-hero::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 120px;
-  background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 50%, transparent 100%);
-}
-.profile-avatar-xl {
-  width: 88px; height: 88px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 30px; font-weight: 700; color: #fff;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.25), 0 0 0 6px rgba(99,102,241,0.08), 0 8px 32px rgba(99,102,241,0.3);
-  position: relative; z-index: 1; letter-spacing: 1px;
-}
-.profile-name {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px; font-weight: 700;
-  background: linear-gradient(135deg, #e8eaf6 0%, var(--accent-light) 60%, #a78bfa 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  position: relative; z-index: 1; letter-spacing: -0.5px;
-}
-.profile-email {
-  font-size: 13px; color: var(--txt-3);
-  display: flex; align-items: center; gap: 6px;
-  position: relative; z-index: 1;
-}
-.profile-email i { font-size: 14px; }
-
-.profile-stats { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
-.stat-box {
-  background: var(--bg-card2); border: 1px solid var(--bd);
-  border-radius: var(--r-md); padding: 16px 22px; text-align: center;
-  min-width: 94px; transition: all var(--t-fast);
-}
-.stat-box:hover { border-color: var(--bd-accent); transform: translateY(-2px); }
-.stat-val {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 26px; font-weight: 700; color: var(--accent-light); line-height: 1;
-  margin-bottom: 5px;
-}
-.stat-label {
-  font-size: 11px; color: var(--txt-3);
-  display: flex; align-items: center; justify-content: center; gap: 4px;
-}
-.stat-label i { font-size: 11px; }
-
-.profile-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
-
-/* ==================== SETTINGS ==================== */
-.settings-list { display: flex; flex-direction: column; }
-.settings-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 0; border-bottom: 1px solid var(--bd);
-  transition: padding var(--t-fast);
-}
-.settings-row:last-child { border-bottom: none; }
-.settings-info {}
-.settings-label { font-size: 13.5px; font-weight: 500; color: var(--txt); margin-bottom: 3px; }
-.settings-desc { font-size: 11px; color: var(--txt-3); }
-
-/* Toggle switch */
-.toggle {
-  width: 40px; height: 23px; border-radius: var(--r-full);
-  background: var(--bg-input); border: 1px solid var(--bd-2);
-  position: relative; cursor: pointer;
-  transition: background var(--t-base), border-color var(--t-base), box-shadow var(--t-base);
-  flex-shrink: 0;
-}
-.toggle.on {
-  background: linear-gradient(90deg, var(--accent), var(--violet));
-  border-color: transparent;
-  box-shadow: 0 0 12px rgba(99,102,241,0.4);
-}
-.toggle-knob {
-  width: 17px; height: 17px; border-radius: 50%;
-  background: var(--txt-3); position: absolute; top: 2px; left: 2px;
-  transition: transform var(--t-base), background var(--t-base);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-.toggle.on .toggle-knob { transform: translateX(17px); background: #fff; }
-
-.select-pill {
-  font-size: 11.5px; color: var(--accent-light); background: var(--accent-soft);
-  border: 1px solid var(--bd-accent); border-radius: var(--r-xs);
-  padding: 6px 13px; cursor: pointer; transition: background var(--t-fast); font-weight: 500;
-}
-.select-pill:hover { background: var(--accent-mid); }
-
-/* ==================== EMPTY STATE ==================== */
-.empty-state {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 14px; padding: 56px 24px;
-  background: var(--bg-card); border: 1px solid var(--bd);
-  border-radius: var(--r-md); text-align: center;
-}
-.empty-state-icon {
-  width: 72px; height: 72px; border-radius: var(--r-lg);
-  background: var(--bg-input); border: 1px solid var(--bd);
-  display: flex; align-items: center; justify-content: center;
-}
-.empty-state-icon i { font-size: 36px; color: var(--txt-4); }
-.empty-state h3 { font-size: 16px; font-weight: 700; color: var(--txt-2); }
-.empty-state p { font-size: 12.5px; color: var(--txt-3); line-height: 1.65; max-width: 260px; }
-.empty-btns { display: flex; gap: 10px; margin-top: 4px; }
-
-/* ==================== TOAST ==================== */
-.toast {
-  position: fixed; bottom: 26px; right: 26px; z-index: 9999;
-  background: var(--bg-card); border: 1px solid var(--bd-2);
-  backdrop-filter: blur(20px);
-  border-radius: var(--r-md); padding: 13px 18px;
-  display: flex; align-items: center; gap: 11px;
-  box-shadow: var(--shadow-lg); font-size: 13px; color: var(--txt);
-  opacity: 0; transform: translateY(14px) scale(0.97);
-  transition: all 0.3s cubic-bezier(.4,0,.2,1);
-  pointer-events: none; min-width: 220px;
-}
-.toast.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-.toast-icon-wrap {
-  width: 30px; height: 30px; border-radius: var(--r-xs); flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-}
-.toast.success .toast-icon-wrap { background: var(--emerald-soft); }
-.toast.info    .toast-icon-wrap { background: var(--accent-soft); }
-.toast.success .toast-icon-wrap i { color: var(--emerald); font-size: 16px; }
-.toast.info    .toast-icon-wrap i { color: var(--accent-light); font-size: 16px; }
-.toast-text { flex: 1; }
-.toast-title { font-size: 12.5px; font-weight: 600; color: var(--txt); }
-.toast-msg   { font-size: 11px; color: var(--txt-3); }
-
-/* ==================== AUTH OVERLAY ==================== */
-.auth-overlay {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(5,8,16,0.92);
-  backdrop-filter: blur(16px) saturate(120%);
-  display: flex; align-items: center; justify-content: center;
-  animation: fadeIn 0.4s ease;
-}
-.auth-overlay.hide { display: none; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.auth-box {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--bd-2);
-  border-radius: var(--r-xl); padding: 40px 44px;
-  width: 400px; max-width: 95vw;
-  display: flex; flex-direction: column; align-items: center; gap: 22px;
-  box-shadow: var(--shadow-lg), 0 0 60px rgba(99,102,241,0.12);
-  animation: authIn 0.35s cubic-bezier(.4,0,.2,1);
-  position: relative; overflow: hidden;
-}
-.auth-box::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--violet), var(--emerald));
-}
-@keyframes authIn {
-  from { opacity: 0; transform: scale(0.96) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.auth-brand {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-}
-.auth-logo-mark {
-  width: 58px; height: 58px; border-radius: 18px;
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; box-shadow: 0 8px 28px rgba(99,102,241,0.4);
-}
-.auth-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px; font-weight: 700; color: var(--txt); text-align: center;
-  letter-spacing: -0.4px;
-}
-.auth-sub {
-  font-size: 13px; color: var(--txt-3); text-align: center; margin-top: -6px;
-}
-
-.auth-form { width: 100%; display: flex; flex-direction: column; gap: 14px; }
-.auth-field { display: flex; flex-direction: column; gap: 6px; }
-.auth-label {
-  font-size: 11px; font-weight: 700; color: var(--txt-2);
-  text-transform: uppercase; letter-spacing: 0.07em;
-  display: flex; align-items: center; gap: 5px;
-}
-.auth-label i { font-size: 12px; color: var(--accent-light); }
-.auth-input-wrap {
-  position: relative; display: flex; align-items: center;
-}
-.auth-input-wrap i {
-  position: absolute; left: 13px; font-size: 16px; color: var(--txt-3);
-  pointer-events: none;
-}
-.auth-input {
-  width: 100%;
-  background: var(--bg-input); border: 1px solid var(--bd-2);
-  border-radius: var(--r-sm); padding: 11px 14px 11px 40px;
-  color: var(--txt); font-size: 13.5px; font-family: inherit; outline: none;
-  transition: all var(--t-base);
-}
-.auth-input:focus {
-  border-color: var(--bd-accent);
-  background: var(--accent-soft);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-}
-.auth-input::placeholder { color: var(--txt-4); }
-
-.auth-submit {
-  width: 100%; padding: 13px; border-radius: var(--r-sm);
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; border: none;
-  font-family: inherit; transition: all var(--t-base); margin-top: 4px;
-  display: flex; align-items: center; justify-content: center; gap: 9px;
-  box-shadow: 0 6px 22px rgba(99,102,241,0.4);
-  letter-spacing: 0.01em;
-}
-.auth-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(99,102,241,0.55);
-}
-.auth-submit:active { transform: translateY(0); }
-.auth-submit i { font-size: 17px; }
-
-.auth-divider {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-}
-.auth-divider-line { flex: 1; height: 1px; background: var(--bd-2); }
-.auth-divider span { font-size: 11px; color: var(--txt-4); font-weight: 500; }
-
-.auth-footer {
-  font-size: 12.5px; color: var(--txt-3); text-align: center;
-}
-.auth-footer a {
-  color: var(--accent-light); text-decoration: none; cursor: pointer; font-weight: 600;
-  transition: color var(--t-fast);
-}
-.auth-footer a:hover { color: var(--txt); }
-
-/* ==================== LOADING DOTS ==================== */
-.loading-dots { display: inline-flex; gap: 4px; }
-.loading-dots span {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent-light);
-  animation: dotBounce 1.2s ease-in-out infinite;
-}
-.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes dotBounce {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50%       { transform: translateY(-6px); opacity: 1; }
-}
-
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 1100px) { .dishes-grid { grid-template-columns: repeat(3,1fr); } }
-@media (max-width: 900px) {
-  .dishes-grid { grid-template-columns: 1fr 1fr; }
-  .top-row     { grid-template-columns: 1fr; }
-  .fav-grid    { grid-template-columns: 1fr; }
-  .detail-body { grid-template-columns: 1fr; }
-  .scan-upload-row { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
-  .sidebar { display: none; }
-  .dishes-grid { grid-template-columns: 1fr 1fr; }
-  .content { padding: 16px; }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FridgeMaster AI{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a78bfa;
+            --secondary: #10b981;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #475569;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-hover: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+        }
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 28px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            text-decoration: none;
+        }
+        .logo-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-icon i { font-size: 26px; color: white; }
+        .logo-text { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            margin-bottom: 10px;
+            padding-left: 12px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+        }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(124,58,237,0.3);
+        }
+        .nav-item i { font-size: 20px; }
+        .sidebar-bottom { margin-top: auto; }
+        /* Main Content */
+        .main { flex:1; padding: 32px; max-width: 1400px; margin:0 auto; width: 100%; }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .page-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .topbar-actions { display: flex; gap: 12px; }
+        .icon-btn {
+            width:44px; height:44px; border-radius: 12px;
+            background: var(--bg-card); border:1px solid var(--border);
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; color: var(--text); transition: all 0.2s ease;
+        }
+        .icon-btn:hover {
+            background: var(--bg-hover); border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        /* Cards & Grids */
+        .grid {
+            display:grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+            gap: 24px; margin-bottom: 32px;
+        }
+        .card {
+            background: var(--bg-card); border:1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+        .card:hover { transform: translateY(-6px); box-shadow: 0 30px 80px rgba(0,0,0,0.35); }
+        .card-image {
+            width: 100%; height: 180px; border-radius: var(--radius-md);
+            object-fit: cover; margin-bottom: 16px;
+        }
+        .card-title {
+            font-family: 'Poppins', sans-serif; font-size: 20px;
+            font-weight: 700; margin-bottom: 8px;
+        }
+        .card-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+        .card-tags { display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .tag {
+            background: var(--bg-hover); padding: 6px 12px;
+            border-radius: 999px; font-size: 12px; font-weight: 600;
+            color: var(--text-muted); border:1px solid var(--border);
+        }
+        .tag.success { background: rgba(16,185,129,0.15); color: var(--secondary); border-color: rgba(16,185,129,0.3); }
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 24px; border-radius: var(--radius-md);
+            font-weight: 600; font-size:14px; cursor:pointer; border: none;
+            text-decoration: none; font-family: inherit; transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #a78bfa); color: white;
+            box-shadow: 0 10px 30px rgba(124,58,237,0.4);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow:0 15px 40px rgba(124,58,237,0.5); }
+        .btn-secondary { background: var(--bg-card); color: var(--text); border:1px solid var(--border); }
+        .btn-secondary:hover { background: var(--bg-hover); border-color: var(--primary); }
+        .btn-danger { background: rgba(239,68,68,0.15); color: #ef4444; border:1px solid rgba(239,68,68,0.3); }
+        .btn-danger:hover { background: rgba(239,68,68,0.25); }
+        .btn-full { width:100%; justify-content:center; }
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display:block; font-weight:600; font-size:13px; color: var(--text-muted); margin-bottom:8px; }
+        .form-input, .form-textarea {
+            width:100%; padding:14px 16px; background: var(--bg-card);
+            border:1px solid var(--border); border-radius: var(--radius-md);
+            color: var(--text); font-size:15px; font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline:none; border-color: var(--primary);
+            box-shadow:0 0 0 3px rgba(124,58,237,0.2);
+        }
+        .form-textarea { min-height:120px; resize: vertical; }
+        /* Upload Zone */
+        .upload-zone {
+            border:2px dashed var(--border); border-radius: var(--radius-lg);
+            padding:40px; text-align:center; cursor:pointer; transition: all 0.3s ease;
+        }
+        .upload-zone:hover { border-color: var(--primary); background: rgba(124,58,237,0.05); }
+        .upload-zone i { font-size: 48px; color: var(--text-muted); margin-bottom:12px; }
+        .upload-zone p { color: var(--text-muted); margin-top:8px; }
+        /* Ingredient Chips */
+        .ingredients-list { display:flex; flex-wrap: wrap; gap:10px; margin:20px 0; }
+        .ingredient-chip {
+            display:flex; align-items:center; gap:8px;
+            padding:10px 16px; background: var(--bg-card);
+            border:1px solid var(--border); border-radius:999px;
+        }
+        .ingredient-chip button {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size:16px; padding:0;
+        }
+        .ingredient-chip button:hover { color: #ef4444; }
+        /* Detail Page */
+        .detail-header {
+            display:flex; gap:24px; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap;
+        }
+        .detail-image {
+            width:100%; max-width:400px; height:280px;
+            border-radius: var(--radius-lg); object-fit: cover;
+        }
+        .detail-info { flex:1; min-width:300px; }
+        .detail-title {
+            font-family: 'Poppins', sans-serif; font-size:36px; font-weight:700; margin-bottom:12px;
+        }
+        .detail-meta { display:flex; gap:16px; margin:16px 0; flex-wrap: wrap; }
+        .detail-meta-item {
+            display:flex; align-items:center; gap:8px;
+            color: var(--text-muted); font-weight:500;
+        }
+        .steps-list { display:flex; flex-direction:column; gap:16px; }
+        .step-item {
+            display:flex; gap:16px; padding:20px;
+            background: var(--bg-card); border:1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+        .step-num {
+            width:36px; height:36px; border-radius:50%;
+            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            display:flex; align-items:center; justify-content:center;
+            color:white; font-weight:700; flex-shrink:0;
+        }
+        .step-text { flex:1; line-height:1.7; }
+        /* Responsive */
+        @media (max-width:1024px) {
+            .sidebar { position: fixed; left:-300px; top:0; transition: left 0.3s ease; }
+            .sidebar.open { left:0; }
+            .main { padding: 20px; }
+        }
+        /* Simple Animations */
+        @keyframes fadeInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeInUp 0.5s ease both; }
+        .hidden { display:none; }
+    </style>
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body data-theme="dark">
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{% url 'home' %}" class="logo">
+                <div class="logo-icon"><i class="ti ti-fridge"></i></div>
+                <div class="logo-text">FridgeMaster</div>
+            </a>
 
-<!-- =============== BACKGROUND =============== -->
-<div class="bg-canvas">
-  <div class="bg-grid"></div>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="orb orb-4"></div>
-</div>
-
-<!-- =============== AUTH OVERLAY =============== -->
-<div class="auth-overlay" id="auth-overlay">
-  <!-- LOGIN -->
-  <div class="auth-box" id="auth-login">
-    <div class="auth-brand">
-      <div class="auth-logo-mark">🧊</div>
-      <div class="auth-title">FridgeMaster</div>
-      <div class="auth-sub">Войдите в аккаунт, чтобы продолжить</div>
-    </div>
-    <div class="auth-form">
-      <div class="auth-field">
-        <label class="auth-label"><i class="ti ti-user"></i> Имя пользователя</label>
-        <div class="auth-input-wrap">
-          <i class="ti ti-at"></i>
-          <input class="auth-input" type="text" placeholder="example_user" id="login-user">
-        </div>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label"><i class="ti ti-lock"></i> Пароль</label>
-        <div class="auth-input-wrap">
-          <i class="ti ti-key"></i>
-          <input class="auth-input" type="password" placeholder="••••••••" id="login-pass">
-        </div>
-      </div>
-      <button class="auth-submit" onclick="doLogin()" id="login-btn">
-        <i class="ti ti-login"></i> Войти в аккаунт
-      </button>
-    </div>
-    <div class="auth-footer">
-      Нет аккаунта? <a onclick="showReg()">Создать аккаунт →</a>
-    </div>
-  </div>
-
-  <!-- REGISTER -->
-  <div class="auth-box" id="auth-reg" style="display:none">
-    <div class="auth-brand">
-      <div class="auth-logo-mark">🍳</div>
-      <div class="auth-title">Регистрация</div>
-      <div class="auth-sub">Создайте новый аккаунт FridgeMaster</div>
-    </div>
-    <div class="auth-form">
-      <div class="auth-field">
-        <label class="auth-label"><i class="ti ti-user"></i> Имя пользователя</label>
-        <div class="auth-input-wrap">
-          <i class="ti ti-at"></i>
-          <input class="auth-input" type="text" placeholder="username">
-        </div>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label"><i class="ti ti-mail"></i> Email</label>
-        <div class="auth-input-wrap">
-          <i class="ti ti-mail"></i>
-          <input class="auth-input" type="email" placeholder="example@mail.com">
-        </div>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label"><i class="ti ti-lock"></i> Пароль</label>
-        <div class="auth-input-wrap">
-          <i class="ti ti-key"></i>
-          <input class="auth-input" type="password" placeholder="••••••••">
-        </div>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label"><i class="ti ti-lock-check"></i> Подтвердите пароль</label>
-        <div class="auth-input-wrap">
-          <i class="ti ti-key"></i>
-          <input class="auth-input" type="password" placeholder="••••••••">
-        </div>
-      </div>
-      <button class="auth-submit" onclick="doLogin()">
-        <i class="ti ti-user-plus"></i> Создать аккаунт
-      </button>
-    </div>
-    <div class="auth-footer">
-      Уже есть аккаунт? <a onclick="showLogin()">← Войти</a>
-    </div>
-  </div>
-</div>
-
-<!-- =============== TOAST =============== -->
-<div class="toast" id="toast">
-  <div class="toast-icon-wrap"><i id="toast-icon" class="ti ti-check"></i></div>
-  <div class="toast-text">
-    <div class="toast-title" id="toast-msg">Готово</div>
-  </div>
-</div>
-
-<!-- =============== APP =============== -->
-<div class="app">
-
-  <!-- ============= SIDEBAR ============= -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-mark"><i class="ti ti-fridge"></i></div>
-      <div>
-        <div class="logo-name">FridgeMaster</div>
-        <div class="logo-ver">AI — <span>Pro</span></div>
-      </div>
-    </div>
-
-    <div class="sidebar-user" onclick="goPage('profile', document.querySelector('[data-page=profile]'))">
-      <div class="user-avatar">DK</div>
-      <div class="user-details">
-        <div class="user-name">Dilora K.</div>
-        <div class="user-sub"><div class="user-online-dot"></div> Online · Dushanbe</div>
-      </div>
-      <i class="ti ti-chevron-right" style="font-size:15px;color:var(--txt-4)"></i>
-    </div>
-
-    <nav class="sidebar-nav">
-      <div class="nav-section-label">Главное</div>
-
-      <div class="nav-item active" data-page="home" onclick="goPage('home',this)">
-        <div class="nav-indicator"></div>
-        <i class="ti ti-home-2"></i>
-        <span class="label">Холодильник</span>
-      </div>
-
-      <div class="nav-item" data-page="favorites" onclick="goPage('favorites',this)">
-        <div class="nav-indicator"></div>
-        <i class="ti ti-heart"></i>
-        <span class="label">Избранное</span>
-        <span class="nav-badge" id="fav-badge">2</span>
-      </div>
-
-      <div class="nav-item" data-page="history" onclick="goPage('history',this)">
-        <div class="nav-indicator"></div>
-        <i class="ti ti-history"></i>
-        <span class="label">История</span>
-      </div>
-
-      <div class="nav-section-label">Аккаунт</div>
-
-      <div class="nav-item" data-page="profile" onclick="goPage('profile',this)">
-        <div class="nav-indicator"></div>
-        <i class="ti ti-user-circle"></i>
-        <span class="label">Профиль</span>
-      </div>
-
-      <div class="nav-item" data-page="settings" onclick="goPage('settings',this)">
-        <div class="nav-indicator"></div>
-        <i class="ti ti-settings-2"></i>
-        <span class="label">Настройки</span>
-      </div>
-    </nav>
-
-    <div class="sidebar-footer">
-      <a onclick="doLogout()">
-        <i class="ti ti-logout"></i>
-        <span>Выйти</span>
-      </a>
-    </div>
-  </aside>
-
-  <!-- ============= MAIN ============= -->
-  <main class="main">
-
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <span class="topbar-page-title" id="topbar-title">Управление холодильником</span>
-      </div>
-      <div class="topbar-search">
-        <i class="ti ti-search"></i>
-        <input type="text" placeholder="Поиск рецептов, продуктов...">
-      </div>
-      <div class="topbar-right">
-        <div class="icon-btn" id="notif-btn" title="Уведомления">
-          <i class="ti ti-bell"></i>
-          <span class="notif-dot"></span>
-        </div>
-        <div class="icon-btn" title="Обновить" onclick="showToast('Данные обновлены','info')">
-          <i class="ti ti-refresh"></i>
-        </div>
-        <div class="topbar-avatar" onclick="goPage('profile',document.querySelector('[data-page=profile]'))">DK</div>
-      </div>
-    </div>
-
-    <!-- Status bar -->
-    <div class="status-bar">
-      <div class="status-chip green"><i class="ti ti-cpu"></i> YOLO v8 активен</div>
-      <div class="status-sep"></div>
-      <div class="status-chip blue"><i class="ti ti-sparkles"></i> AI рекомендации</div>
-      <div class="status-sep"></div>
-      <div class="status-chip purple"><i class="ti ti-box"></i> 7 продуктов обнаружено</div>
-    </div>
-
-    <!-- Content -->
-    <div class="content">
-
-      <!-- ======= PAGE: HOME ======= -->
-      <div class="page active" id="page-home">
-
-        <!-- Scan panel -->
-        <div class="panel scan-panel">
-          <div class="panel-head">
-            <i class="ti ti-camera accent-icon"></i> Скан холодильника
-          </div>
-
-          <div class="scan-upload-row">
-            <!-- Dropzone -->
-            <div class="upload-zone-wrap">
-              <label class="upload-dropzone" id="upload-dropzone" for="photo-file-input">
-                <div class="dz-icon-wrap">
-                  <i class="ti ti-cloud-upload"></i>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">{% trans "Главное" %}</div>
+                    <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                        <i class="ti ti-home"></i><span>{% trans "Главная" %}</span>
+                    </a>
+                    <a href="{% url 'recipe_search' %}" class="nav-item {% if request.resolver_match.url_name == 'recipe_search' %}active{% endif %}">
+                        <i class="ti ti-pencil"></i><span>{% trans "Текст ингредиентов" %}</span>
+                    </a>
+                    <a href="{% url 'image_search' %}" class="nav-item {% if request.resolver_match.url_name == 'image_search' %}active{% endif %}">
+                        <i class="ti ti-camera"></i><span>{% trans "Сканировать фото" %}</span>
+                    </a>
                 </div>
-                <span class="dz-title">Загрузите фото холодильника</span>
-                <span class="dz-hint">Перетащите файл или нажмите для выбора</span>
-                <div class="dz-badge">
-                  <span>JPG</span><span>PNG</span><span>WEBP</span>
+
+                {% if user.is_authenticated %}
+                <div class="nav-section">
+                    <div class="nav-section-title">{% trans "Мое" %}</div>
+                    <a href="{% url 'favorites' %}" class="nav-item {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">
+                        <i class="ti ti-heart"></i><span>{% trans "Избранное" %}</span>
+                    </a>
+                    <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+                        <i class="ti ti-history"></i><span>{% trans "История" %}</span>
+                    </a>
+                    <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                        <i class="ti ti-user"></i><span>{% trans "Профиль" %}</span>
+                    </a>
                 </div>
-                <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
-              </label>
+                {% endif %}
+            </nav>
 
-              <div class="photo-preview-box" id="photo-preview-box" style="display:none">
-                <img id="photo-preview-img" src="" alt="Фото холодильника">
-                <div class="scan-overlay-new" id="scan-overlay-new">
-                  <div class="scan-line"></div>
-                  <span class="scan-txt-new"><i class="ti ti-cpu"></i> YOLO анализирует...</span>
+            <div class="sidebar-bottom">
+                {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="nav-item">
+                    <i class="ti ti-logout"></i><span>{% trans "Выйти" %}</span>
+                </a>
+                {% else %}
+                <a href="{% url 'login' %}" class="nav-item">
+                    <i class="ti ti-login"></i><span>{% trans "Войти" %}</span>
+                </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main">
+            <div class="topbar">
+                <h1 class="page-title">{% block page_title %}{% trans "Добро пожаловать" %}{% endblock %}</h1>
+                <div class="topbar-actions">
+                    <!-- Language Switcher -->
+                    <div style="position:relative;">
+                        <button class="icon-btn" onclick="document.getElementById('langDropdown').classList.toggle('hidden')" title="{% trans 'Язык' %}">
+                            <i class="ti ti-language"></i>
+                        </button>
+                        <div id="langDropdown" class="hidden" style="position:absolute; right:0; top:50px; background: var(--bg-card); border:1px solid var(--border); border-radius: var(--radius-md); padding:8px; box-shadow: var(--shadow); z-index:100;">
+                            <a href="{% url 'set_language' %}?lang=ru" class="nav-item" style="padding:8px 12px;">🇷🇺 Русский</a>
+                            <a href="{% url 'set_language' %}?lang=en" class="nav-item" style="padding:8px 12px;">🇬🇧 English</a>
+                            <a href="{% url 'set_language' %}?lang=tg" class="nav-item" style="padding:8px 12px;">🇹🇯 Тоҷикӣ</a>
+                        </div>
+                    </div>
+                    <!-- Theme Toggle -->
+                    <button class="icon-btn" id="themeToggle" title="{% trans 'Тема' %}">
+                        <i class="ti ti-moon" id="themeIcon"></i>
+                    </button>
                 </div>
-                <button class="photo-retake-btn" onclick="resetPhoto()" title="Загрузить другое">
-                  <i class="ti ti-refresh"></i>
-                </button>
-              </div>
             </div>
 
-            <!-- Right: recognized + manual -->
-            <div class="scan-right">
-
-              <div class="scan-recognized-block" id="scan-recognized-block" style="display:none">
-                <div class="scan-right-label">
-                  <i class="ti ti-robot"></i> AI распознал
-                  <span class="scan-count-badge" id="scan-count-badge">0</span>
-                </div>
-                <div class="chips-wrap" id="chips-list" style="margin-bottom:10px"></div>
-                <div class="scan-hint-bar" id="scan-hint-bar">
-                  <i class="ti ti-info-circle"></i>
-                  Не нашли что-то? Допишите ниже — нажмите <kbd>Enter</kbd> или <kbd>+</kbd>
-                </div>
-              </div>
-
-              <div class="scan-placeholder" id="scan-placeholder">
-                <i class="ti ti-photo-scan"></i>
-                <span>Загрузите фото — AI определит продукты автоматически</span>
-              </div>
-
-              <div class="manual-add-block">
-                <div class="scan-right-label" style="margin-bottom:6px">
-                  <i class="ti ti-pencil"></i> Добавить вручную
-                </div>
-                <div class="manual-input-row">
-                  <div class="search-box" style="flex:1;margin-bottom:0">
-                    <i class="ti ti-search"></i>
-                    <input type="text" placeholder="Введите продукт и нажмите Enter..."
-                           id="ingr-input" onkeydown="handleIngrKey(event)">
-                  </div>
-                  <button class="add-ingr-btn" onclick="addIngrFromBtn()">
-                    <i class="ti ti-plus"></i>
-                  </button>
-                </div>
-              </div>
-
+            <div class="animate-fade-in">
+                {% block content %}{% endblock %}
             </div>
-          </div>
-        </div>
-
-        <!-- Dish recommendations -->
-        <div>
-          <div class="sec-head">
-            <div class="sec-title"><i class="ti ti-sparkles"></i> Рекомендуемые блюда</div>
-            <div class="sec-link">Все блюда <i class="ti ti-chevron-right"></i></div>
-          </div>
-
-          <div class="dishes-grid" id="dishes-grid">
-
-            <div class="dish-card" onclick="selectDish(this,0)">
-              <div class="dish-thumb" style="background:linear-gradient(135deg,#0e1f10,#0a1508)">
-                <div class="dish-thumb-bg" style="background:var(--emerald)"></div>
-                <span class="dish-thumb-emoji">🍝</span>
-              </div>
-              <div class="dish-meta">
-                <div class="dish-name">Quick Chicken Pasta</div>
-                <div class="dish-stats">
-                  <span class="dish-stat"><i class="ti ti-clock"></i> 20 мин</span>
-                  <span class="dish-stat rating"><i class="ti ti-star-filled"></i> 4.8</span>
-                </div>
-                <div class="match-badge match-full"><i class="ti ti-check"></i> 100% matched</div>
-              </div>
-            </div>
-
-            <div class="dish-card" onclick="selectDish(this,1)">
-              <div class="dish-thumb" style="background:linear-gradient(135deg,#0d1f14,#091410)">
-                <div class="dish-thumb-bg" style="background:#86efac"></div>
-                <span class="dish-thumb-emoji">🥗</span>
-              </div>
-              <div class="dish-meta">
-                <div class="dish-name">Veggie Salad Delight</div>
-                <div class="dish-stats">
-                  <span class="dish-stat"><i class="ti ti-clock"></i> 15 мин</span>
-                  <span class="dish-stat rating"><i class="ti ti-star-filled"></i> 4.6</span>
-                </div>
-                <div class="match-badge match-part">2/4 ingredients</div>
-              </div>
-            </div>
-
-            <div class="dish-card" onclick="selectDish(this,2)">
-              <div class="dish-thumb" style="background:linear-gradient(135deg,#1f1208,#140c04)">
-                <div class="dish-thumb-bg" style="background:#fdba74"></div>
-                <span class="dish-thumb-emoji">🍗</span>
-              </div>
-              <div class="dish-meta">
-                <div class="dish-name">Baked Chicken Tender</div>
-                <div class="dish-stats">
-                  <span class="dish-stat"><i class="ti ti-clock"></i> 40 мин</span>
-                  <span class="dish-stat rating"><i class="ti ti-star-filled"></i> 4.5</span>
-                </div>
-                <div class="match-badge match-full"><i class="ti ti-check"></i> 100% matched</div>
-              </div>
-            </div>
-
-            <div class="dish-card" onclick="selectDish(this,3)">
-              <div class="dish-thumb" style="background:linear-gradient(135deg,#160e24,#0e0918)">
-                <div class="dish-thumb-bg" style="background:#c4b5fd"></div>
-                <span class="dish-thumb-emoji">🧀</span>
-              </div>
-              <div class="dish-meta">
-                <div class="dish-name">Cheesy Bake</div>
-                <div class="dish-stats">
-                  <span class="dish-stat"><i class="ti ti-clock"></i> 35 мин</span>
-                  <span class="dish-stat rating"><i class="ti ti-star-filled"></i> 4.6</span>
-                </div>
-                <div class="match-badge match-full"><i class="ti ti-check"></i> 100% matched</div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- Detail panel -->
-        <div class="detail-panel" id="detail-panel">
-          <div class="detail-header">
-            <div class="detail-emoji-box" id="d-emoji">🍝</div>
-            <div class="detail-info">
-              <div class="detail-title" id="d-title">Quick Chicken Pasta</div>
-              <div class="detail-meta">
-                <span><i class="ti ti-clock"></i> <span id="d-time">20 мин</span></span>
-                <span><i class="ti ti-trending-up"></i> <span id="d-diff">Лёгкое</span></span>
-                <span><i class="ti ti-robot"></i> AI рецепт</span>
-              </div>
-            </div>
-            <div class="detail-actions">
-              <button class="btn btn-primary" id="fav-dish-btn" onclick="addToFav()">
-                <i class="ti ti-heart"></i> В избранное
-              </button>
-              <button class="btn btn-ghost"><i class="ti ti-player-play"></i> Видео</button>
-              <button class="btn btn-ghost btn-icon"
-                onclick="document.getElementById('detail-panel').classList.remove('show')">
-                <i class="ti ti-x"></i>
-              </button>
-            </div>
-          </div>
-          <div class="detail-body">
-            <div>
-              <div class="sub-label"><i class="ti ti-box"></i> Ингредиенты</div>
-              <div class="ingr-list" id="d-ingr"></div>
-            </div>
-            <div>
-              <div class="sub-label"><i class="ti ti-chef-hat"></i> Как приготовить</div>
-              <div class="steps-list" id="d-steps"></div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /HOME -->
-
-      <!-- ======= PAGE: FAVORITES ======= -->
-      <div class="page" id="page-favorites">
-        <div class="fav-grid" id="fav-grid">
-
-          <div class="fav-card">
-            <div class="fav-emoji-box">🍝</div>
-            <div class="fav-body">
-              <div class="fav-name">Quick Chicken Pasta</div>
-              <div class="fav-desc">Быстрая паста с курицей, томатами и сыром. Сытно, вкусно, быстро.</div>
-              <div class="fav-tags">
-                <span class="fav-tag">Tomato</span>
-                <span class="fav-tag">Chicken</span>
-                <span class="fav-tag">Cheese</span>
-              </div>
-              <div class="fav-actions">
-                <button class="fav-btn read"><i class="ti ti-book"></i> Рецепт</button>
-                <button class="fav-btn del" onclick="removeFav(this)"><i class="ti ti-trash"></i> Удалить</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="fav-card">
-            <div class="fav-emoji-box">🥗</div>
-            <div class="fav-body">
-              <div class="fav-name">Veggie Salad Delight</div>
-              <div class="fav-desc">Лёгкий витаминный салат из свежих овощей с ароматным базиликом.</div>
-              <div class="fav-tags">
-                <span class="fav-tag">Tomato</span>
-                <span class="fav-tag">Basil</span>
-              </div>
-              <div class="fav-actions">
-                <button class="fav-btn read"><i class="ti ti-book"></i> Рецепт</button>
-                <button class="fav-btn del" onclick="removeFav(this)"><i class="ti ti-trash"></i> Удалить</button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-        <div class="empty-state" id="fav-empty" style="display:none">
-          <div class="empty-state-icon"><i class="ti ti-heart"></i></div>
-          <h3>Избранных рецептов нет</h3>
-          <p>Добавляйте понравившиеся блюда из раздела рекомендаций.</p>
-          <div class="empty-btns">
-            <button class="btn btn-primary" onclick="goPage('home',document.querySelector('[data-page=home]'))">
-              <i class="ti ti-home"></i> На главную
-            </button>
-          </div>
-        </div>
-      </div><!-- /FAVORITES -->
-
-      <!-- ======= PAGE: HISTORY ======= -->
-      <div class="page" id="page-history">
-        <div class="hist-list">
-
-          <div class="hist-card">
-            <div class="hist-icon">🍅</div>
-            <div class="hist-body">
-              <div class="hist-date"><i class="ti ti-calendar"></i> 29 июня 2026 · 09:14</div>
-              <div class="hist-ingr">Tomato, Chicken, Cheese, Garlic</div>
-              <div class="hist-method"><i class="ti ti-pencil"></i> Ввод вручную</div>
-              <div class="hist-dishes">
-                <span class="hist-tag">Quick Chicken Pasta</span>
-                <span class="hist-tag">Cheesy Bake</span>
-              </div>
-            </div>
-            <i class="ti ti-chevron-right hist-arrow"></i>
-          </div>
-
-          <div class="hist-card">
-            <div class="hist-icon">📸</div>
-            <div class="hist-body">
-              <div class="hist-date"><i class="ti ti-calendar"></i> 28 июня 2026 · 19:42</div>
-              <div class="hist-ingr">Яйца, хлеб, масло, зелень</div>
-              <div class="hist-method"><i class="ti ti-camera"></i> Сканирование фото (YOLO)</div>
-              <div class="hist-dishes">
-                <span class="hist-tag">French Toast</span>
-                <span class="hist-tag">Яичница с зеленью</span>
-              </div>
-            </div>
-            <i class="ti ti-chevron-right hist-arrow"></i>
-          </div>
-
-          <div class="hist-card">
-            <div class="hist-icon">🥕</div>
-            <div class="hist-body">
-              <div class="hist-date"><i class="ti ti-calendar"></i> 27 июня 2026 · 14:30</div>
-              <div class="hist-ingr">Морковь, лук, картофель, говядина</div>
-              <div class="hist-method"><i class="ti ti-pencil"></i> Ввод вручную</div>
-              <div class="hist-dishes">
-                <span class="hist-tag">Суп харчо</span>
-                <span class="hist-tag">Плов</span>
-              </div>
-            </div>
-            <i class="ti ti-chevron-right hist-arrow"></i>
-          </div>
-
-          <div class="hist-card">
-            <div class="hist-icon">🍋</div>
-            <div class="hist-body">
-              <div class="hist-date"><i class="ti ti-calendar"></i> 26 июня 2026 · 11:05</div>
-              <div class="hist-ingr">Лимон, сахар, вода, мята</div>
-              <div class="hist-method"><i class="ti ti-pencil"></i> Ввод вручную</div>
-              <div class="hist-dishes">
-                <span class="hist-tag">Домашний лимонад</span>
-                <span class="hist-tag">Мятный чай</span>
-              </div>
-            </div>
-            <i class="ti ti-chevron-right hist-arrow"></i>
-          </div>
-
-        </div>
-      </div><!-- /HISTORY -->
-
-      <!-- ======= PAGE: PROFILE ======= -->
-      <div class="page" id="page-profile">
-        <div class="profile-hero">
-          <div class="profile-avatar-xl">DK</div>
-          <div class="profile-name">Dilora K.</div>
-          <div class="profile-email"><i class="ti ti-mail"></i> dilora.k@example.com</div>
-          <div class="profile-stats">
-            <div class="stat-box">
-              <div class="stat-val" id="prof-fav-count">2</div>
-              <div class="stat-label"><i class="ti ti-heart"></i> Избранное</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val">4</div>
-              <div class="stat-label"><i class="ti ti-history"></i> Запросы</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val">7</div>
-              <div class="stat-label"><i class="ti ti-box"></i> Продуктов</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val">12</div>
-              <div class="stat-label"><i class="ti ti-chef-hat"></i> Рецептов</div>
-            </div>
-          </div>
-          <div class="profile-btns">
-            <button class="btn btn-primary"
-              onclick="goPage('favorites',document.querySelector('[data-page=favorites]'))">
-              <i class="ti ti-star"></i> Избранное
-            </button>
-            <button class="btn btn-ghost"
-              onclick="goPage('history',document.querySelector('[data-page=history]'))">
-              <i class="ti ti-history"></i> История
-            </button>
-            <button class="btn btn-ghost" style="border-color:rgba(244,63,94,0.2);color:var(--rose)"
-              onclick="doLogout()">
-              <i class="ti ti-logout"></i> Выйти
-            </button>
-          </div>
-        </div>
-      </div><!-- /PROFILE -->
-
-      <!-- ======= PAGE: SETTINGS ======= -->
-      <div class="page" id="page-settings">
-        <div class="panel">
-          <div class="panel-head"><i class="ti ti-settings-2 accent-icon"></i> Настройки приложения</div>
-          <div class="settings-list">
-
-            <div class="settings-row">
-              <div class="settings-info">
-                <div class="settings-label">Уведомления</div>
-                <div class="settings-desc">Напоминания об истекающих продуктах</div>
-              </div>
-              <div class="toggle on" onclick="this.classList.toggle('on')">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-
-            <div class="settings-row">
-              <div class="settings-info">
-                <div class="settings-label">Тёмная тема</div>
-                <div class="settings-desc">Использовать тёмное оформление</div>
-              </div>
-              <div class="toggle on" onclick="this.classList.toggle('on')">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-
-            <div class="settings-row">
-              <div class="settings-info">
-                <div class="settings-label">AI рекомендации</div>
-                <div class="settings-desc">Автоматически предлагать блюда при входе</div>
-              </div>
-              <div class="toggle on" onclick="this.classList.toggle('on')">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-
-            <div class="settings-row">
-              <div class="settings-info">
-                <div class="settings-label">YOLO сканирование</div>
-                <div class="settings-desc">Использовать нейросеть для распознавания</div>
-              </div>
-              <div class="toggle on" onclick="this.classList.toggle('on')">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-
-            <div class="settings-row">
-              <div class="settings-info">
-                <div class="settings-label">Язык интерфейса</div>
-                <div class="settings-desc">Выберите язык приложения</div>
-              </div>
-              <div class="select-pill">🇷🇺 Русский</div>
-            </div>
-
-            <div class="settings-row">
-              <div class="settings-info">
-                <div class="settings-label">Единицы измерения</div>
-                <div class="settings-desc">Граммы / Унции</div>
-              </div>
-              <div class="select-pill">кг / г</div>
-            </div>
-
-          </div>
-        </div>
-      </div><!-- /SETTINGS -->
-
-    </div><!-- /content -->
-  </main>
-
-</div><!-- /app -->
-
-<!-- ===================== JAVASCRIPT ===================== -->
-<script>
-/* ---- DATA ---- */
-const DISHES = [
-  {
-    emoji:'🍝', name:'Quick Chicken Pasta', time:'20 мин', diff:'Лёгкое',
-    ingr:['Pasta','Tomato','Chicken','Cheese','Garlic','Olive oil'],
-    have:[1,2,3,4],
-    steps:[
-      'Отварить пасту в подсолённой воде 8–10 минут до состояния al dente.',
-      'Обжарить кусочки курицы с чесноком на оливковом масле 5–7 минут.',
-      'Добавить нарезанные томаты, тушить 4–5 минут на среднем огне.',
-      'Соединить с пастой, посыпать тёртым сыром и подавать.'
-    ]
-  },
-  {
-    emoji:'🥗', name:'Veggie Salad Delight', time:'15 мин', diff:'Лёгкое',
-    ingr:['Tomato','Basil','Olive oil','Salt','Pepper'],
-    have:[0,1],
-    steps:[
-      'Нарезать томаты крупными кусочками.',
-      'Порвать листья свежего базилика руками.',
-      'Полить оливковым маслом, посолить и поперчить.',
-      'Аккуратно перемешать и сразу подавать.'
-    ]
-  },
-  {
-    emoji:'🍗', name:'Baked Chicken Tender', time:'40 мин', diff:'Среднее',
-    ingr:['Chicken','Garlic','Cheese','Pepper','Rosemary'],
-    have:[0,1,2,3],
-    steps:[
-      'Замариновать кусочки курицы в специях и чесноке на 15 минут.',
-      'Разогреть духовку до 200°C.',
-      'Выложить курицу в форму, посыпать тёртым сыром.',
-      'Запекать 22–25 минут до золотистой корочки.'
-    ]
-  },
-  {
-    emoji:'🧀', name:'Cheesy Bake', time:'35 мин', diff:'Среднее',
-    ingr:['Cheese','Tomato','Chicken','Pepper','Eggs','Cream'],
-    have:[0,1,2,3],
-    steps:[
-      'Нарезать все ингредиенты равномерными кусочками.',
-      'Выложить слоями в жаростойкую форму.',
-      'Взбить яйца со сливками, залить сверху.',
-      'Запекать при 180°C 30 минут до схватывания запеканки.'
-    ]
-  }
-];
-
-let favCount = 2;
-let activeDishIdx = null;
-
-/* ---- NAVIGATION ---- */
-function goPage(page, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const pageEl = document.getElementById('page-' + page);
-  if (pageEl) pageEl.classList.add('active');
-  if (el) el.classList.add('active');
-  const titles = {
-    home: 'Управление холодильником',
-    favorites: 'Избранные рецепты',
-    history: 'История запросов',
-    profile: 'Профиль',
-    settings: 'Настройки'
-  };
-  document.getElementById('topbar-title').textContent = titles[page] || 'FridgeMaster';
-  const dp = document.getElementById('detail-panel');
-  if (dp) dp.classList.remove('show');
-}
-
-/* ---- DISH SELECT ---- */
-function selectDish(card, idx) {
-  document.querySelectorAll('.dish-card').forEach(c => c.classList.remove('active'));
-  card.classList.add('active');
-  activeDishIdx = idx;
-  const d = DISHES[idx];
-  document.getElementById('d-emoji').textContent = d.emoji;
-  document.getElementById('d-title').textContent = d.name;
-  document.getElementById('d-time').textContent  = d.time;
-  document.getElementById('d-diff').textContent  = d.diff;
-
-  const ingrEl = document.getElementById('d-ingr');
-  ingrEl.innerHTML = d.ingr.map((name, i) =>
-    `<span class="ingr-tag${d.have.includes(i) ? ' have' : ''}">${name}</span>`
-  ).join('');
-
-  const stepsEl = document.getElementById('d-steps');
-  stepsEl.innerHTML = d.steps.map((s, i) => `
-    <div class="step-row">
-      <div class="step-num">${i+1}</div>
-      <div class="step-txt">${s}</div>
+        </main>
     </div>
-  `).join('');
 
-  const btn = document.getElementById('fav-dish-btn');
-  btn.innerHTML = '<i class="ti ti-heart"></i> В избранное';
-  btn.disabled = false;
-  btn.style.opacity = '';
+    <script>
+        // Theme Toggle
+        function getTheme() { return localStorage.getItem('theme') || 'dark'; }
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            document.getElementById('themeIcon').className = theme === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+        }
+        setTheme(getTheme());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+        });
 
-  const panel = document.getElementById('detail-panel');
-  panel.classList.add('show');
-  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
-}
-
-/* ---- FAV ---- */
-function addToFav() {
-  favCount++;
-  updateFavCount();
-  const btn = document.getElementById('fav-dish-btn');
-  btn.innerHTML = '<i class="ti ti-heart-filled"></i> В избранном';
-  btn.disabled = true;
-  btn.style.opacity = '.65';
-  showToast('Добавлено в избранное', 'success');
-}
-
-function updateFavCount() {
-  document.getElementById('fav-badge').textContent = favCount;
-  document.getElementById('prof-fav-count').textContent = favCount;
-}
-
-function removeFav(btn) {
-  const card = btn.closest('.fav-card');
-  card.style.transition = 'all .35s';
-  card.style.opacity = '0';
-  card.style.transform = 'scale(0.96) translateY(4px)';
-  setTimeout(() => {
-    card.remove();
-    favCount = Math.max(0, favCount - 1);
-    updateFavCount();
-    const grid = document.getElementById('fav-grid');
-    if (!grid.querySelector('.fav-card')) {
-      grid.style.display = 'none';
-      document.getElementById('fav-empty').style.display = 'flex';
-    }
-  }, 350);
-  showToast('Удалено из избранного', 'info');
-}
-
-/* ---- CHIPS ---- */
-function toggleChip(el) {
-  el.classList.toggle('sel');
-  const icon = el.querySelector('i');
-  if (!icon) return;
-  icon.className = el.classList.contains('sel') ? 'ti ti-check' : 'ti ti-plus';
-}
-
-function handleIngrKey(e) {
-  if (e.key !== 'Enter') return;
-  addIngr(e.target);
-}
-
-function addIngrFromBtn() {
-  addIngr(document.getElementById('ingr-input'));
-}
-
-function addIngr(inputEl) {
-  const val = inputEl.value.trim();
-  if (!val) return;
-  const chip = document.createElement('div');
-  chip.className = 'chip sel';
-  chip.onclick = function() { toggleChip(this); };
-  chip.innerHTML = `<i class="ti ti-check"></i>${val}`;
-  document.getElementById('chips-list').appendChild(chip);
-  inputEl.value = '';
-
-  // Animate in
-  chip.style.opacity = '0';
-  chip.style.transform = 'scale(0.8)';
-  requestAnimationFrame(() => {
-    chip.style.transition = 'all 0.2s cubic-bezier(.4,0,.2,1)';
-    chip.style.opacity = '1';
-    chip.style.transform = 'scale(1)';
-  });
-}
-
-/* ---- PHOTO UPLOAD ---- */
-function handlePhotoUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    document.getElementById('photo-preview-img').src = ev.target.result;
-    document.getElementById('upload-dropzone').style.display = 'none';
-    const previewBox = document.getElementById('photo-preview-box');
-    previewBox.style.display = 'block';
-    const overlay = document.getElementById('scan-overlay-new');
-    overlay.style.display = 'flex';
-
-    // Simulate YOLO scan
-    setTimeout(() => {
-      overlay.style.display = 'none';
-      const items = ['🍅 Tomato','🍗 Chicken','🧀 Cheese','🧄 Garlic','🌿 Basil','🥚 Eggs (2)','🥛 Milk','🧅 Onion'];
-      const chipsList = document.getElementById('chips-list');
-      chipsList.innerHTML = '';
-      items.forEach(item => {
-        const chip = document.createElement('div');
-        chip.className = 'chip sel';
-        chip.onclick = function() { toggleChip(this); };
-        chip.innerHTML = `<i class="ti ti-check"></i>${item}`;
-        chip.style.opacity = '0';
-        chip.style.transform = 'scale(0.8)';
-        chipsList.appendChild(chip);
-        setTimeout(() => {
-          chip.style.transition = 'all 0.2s cubic-bezier(.4,0,.2,1)';
-          chip.style.opacity = '1';
-          chip.style.transform = 'scale(1)';
-        }, 30);
-      });
-      document.getElementById('scan-count-badge').textContent = items.length;
-      document.getElementById('scan-recognized-block').style.display = 'block';
-      document.getElementById('scan-placeholder').style.display = 'none';
-      showToast(`Распознано ${items.length} продуктов`, 'success');
-    }, 2000);
-  };
-  reader.readAsDataURL(file);
-}
-
-function resetPhoto() {
-  document.getElementById('photo-preview-box').style.display = 'none';
-  document.getElementById('upload-dropzone').style.display = 'flex';
-  document.getElementById('photo-file-input').value = '';
-}
-
-/* ---- TOAST ---- */
-let toastTimer;
-function showToast(msg, type = 'success') {
-  clearTimeout(toastTimer);
-  const t    = document.getElementById('toast');
-  const icon = document.getElementById('toast-icon');
-  const txt  = document.getElementById('toast-msg');
-  txt.textContent = msg;
-  t.className = `toast ${type}`;
-  icon.className = type === 'success' ? 'ti ti-check' : 'ti ti-info-circle';
-  t.classList.add('show');
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
-}
-
-/* ---- AUTH ---- */
-function doLogin() {
-  document.getElementById('auth-overlay').classList.add('hide');
-  showToast('Добро пожаловать, Dilora K.!', 'success');
-}
-function doLogout() {
-  document.getElementById('auth-overlay').classList.remove('hide');
-}
-function showReg() {
-  document.getElementById('auth-login').style.display = 'none';
-  document.getElementById('auth-reg').style.display   = 'flex';
-}
-function showLogin() {
-  document.getElementById('auth-reg').style.display   = 'none';
-  document.getElementById('auth-login').style.display = 'flex';
-}
-
-/* ---- ENTER on auth ---- */
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const overlay = document.getElementById('auth-overlay');
-    if (!overlay.classList.contains('hide')) doLogin();
-  }
-});
-
-/* ---- RIPPLE on nav items ---- */
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', function(e) {
-    const ripple = document.createElement('span');
-    const rect = this.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    ripple.style.cssText = `
-      position: absolute;
-      width: ${size}px; height: ${size}px;
-      top: ${e.clientY - rect.top - size/2}px;
-      left: ${e.clientX - rect.left - size/2}px;
-      background: rgba(99,102,241,0.15);
-      border-radius: 50%;
-      transform: scale(0);
-      animation: rippleAnim 0.45s ease-out;
-      pointer-events: none;
-    `;
-    this.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 450);
-  });
-});
-
-/* ripple keyframes */
-const rippleStyle = document.createElement('style');
-rippleStyle.textContent = `
-  @keyframes rippleAnim {
-    to { transform: scale(2.5); opacity: 0; }
-  }
-`;
-document.head.appendChild(rippleStyle);
-
-/* ---- DRAG & DROP on dropzone ---- */
-const dz = document.getElementById('upload-dropzone');
-if (dz) {
-  dz.addEventListener('dragover', e => {
-    e.preventDefault();
-    dz.style.borderColor = 'rgba(99,102,241,0.8)';
-    dz.style.background = 'rgba(99,102,241,0.15)';
-  });
-  dz.addEventListener('dragleave', () => {
-    dz.style.borderColor = '';
-    dz.style.background = '';
-  });
-  dz.addEventListener('drop', e => {
-    e.preventDefault();
-    dz.style.borderColor = '';
-    dz.style.background = '';
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const inp = document.getElementById('photo-file-input');
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      inp.files = dt.files;
-      handlePhotoUpload({ target: inp });
-    }
-  });
-}
-</script>
-
+        // Close dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.icon-btn')) {
+                document.getElementById('langDropdown')?.classList.add('hidden');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

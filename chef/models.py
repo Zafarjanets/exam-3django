@@ -99,6 +99,14 @@ class AIDishSuggestion(models.Model):
         from .utils import build_cooking_video_links
         return build_cooking_video_links(self.title, self.ingredients_text)
 
+    @property
+    def photo_url(self):
+        """Get a relevant food photo URL based on the dish title."""
+        import urllib.parse
+        search_term = urllib.parse.quote(self.title)
+        # Use Unsplash source for random food photos based on search term
+        return f"https://source.unsplash.com/600x400/?{search_term},food,cooking"
+
 class Review(models.Model):
     user = models.ForeignKey( settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe,on_delete=models.CASCADE,related_name='reviews')

@@ -1,66 +1,45 @@
 {% extends "base.html" %}
- 
-{% block title %}Избранное | AI Recipe Assistant{% endblock %}
- 
+{% load i18n %}
+
+{% block title %}{% trans "Избранное" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "Избранное" %}{% endblock %}
+
 {% block content %}
-<h2 class="history-page-title">❤️ Избранные рецепты</h2>
- 
 {% if favorites %}
-    <div class="favorites-grid">
-        {% for item in favorites %}
-            <div class="fav-card glass-panel">
-                <div class="fav-image">
-                    {% if item.recipe.image %}
-                        <img src="{{ item.recipe.image.url }}" alt="{{ item.recipe.title }}">
-                    {% else %}
-                        <div class="favorites-empty-fallback">🍲</div>
-                    {% endif %}
-                </div>
- 
-                <div class="fav-content">
-                    <div>
-                        <h3 class="fav-title">{{ item.recipe.title }}</h3>
-                        <p class="fav-description">{{ item.recipe.description }}</p>
- 
-                        <div class="recipe-badges fav-badges-row">
-                            <span class="badge">⏱️ {{ item.recipe.cooking_time }} мин</span>
-                            <span class="badge">👥 {{ item.recipe.servings }} порц.</span>
-                            <span class="badge badge-success">{{ item.recipe.get_difficulty_display }}</span>
-                        </div>
-                    </div>
- 
-                    {% with ai_dish=item.recipe.ai_suggestions.first %}
-                        {% if ai_dish %}
-                            <a href="{% url 'ai_dish_detail' ai_dish.id %}" class="btn btn-primary fav-read-btn">
-                                📖 Читать рецепт
-                            </a>
-                        {% endif %}
-                    {% endwith %}
- 
-                    <a href="{% url 'remove_favorite' item.recipe.id %}" class="btn btn-danger fav-remove-btn">
-                        ❌ Удалить
-                    </a>
-                </div>
-            </div>
-        {% endfor %}
+<div class="grid">
+    {% for favorite in favorites %}
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop" class="card-image" alt="{{ favorite.recipe.title }}">
+        <h3 class="card-title">{{ favorite.recipe.title }}</h3>
+        <p class="card-desc">{{ favorite.recipe.description }}</p>
+        <div class="card-tags">
+            {% if favorite.recipe.cooking_time %}
+            <span class="tag">{{ favorite.recipe.cooking_time }} {% trans "мин" %}</span>
+            {% endif %}
+            {% if favorite.recipe.difficulty %}
+            <span class="tag success">{{ favorite.recipe.get_difficulty_display }}</span>
+            {% endif %}
+        </div>
+        <div style="display:flex; gap:8px;">
+            {% if favorite.recipe.ai_suggestions.first %}
+            <a href="{% url 'ai_dish_detail' favorite.recipe.ai_suggestions.first.id %}" class="btn btn-primary btn-full">
+                <i class="ti ti-book"></i> {% trans "Смотреть рецепт" %}
+            </a>
+            {% endif %}
+            <a href="{% url 'remove_favorite' favorite.recipe.id %}" class="btn btn-danger" style="padding:12px; aspect-ratio:1;">
+                <i class="ti ti-trash"></i>
+            </a>
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% else %}
-    <div class="glass-panel empty-state-panel">
-        <span class="empty-state-icon">⭐</span>
-        <h3>Избранных рецептов нет</h3>
-        <p class="empty-state-text">
-            Вы можете добавлять рецепты в этот раздел, чтобы быстро открывать их в любое время.
-        </p>
-        <a href="/" class="btn btn-primary">На главную</a>
+<div class="card" style="text-align:center; padding:60px 24px;">
+    <div style="width:100px; height:100px; border-radius:50%; background:var(--bg-hover); display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+        <i class="ti ti-heart" style="font-size:48px; color:var(--text-muted);"></i>
     </div>
+    <h3 style="font-family:'Poppins',sans-serif; font-size:22px; margin-bottom:8px;">{% trans "Пока пусто" %}</h3>
+    <p style="color:var(--text-muted);">{% trans "Добавляй рецепты, чтобы сохранить их здесь" %}</p>
+</div>
 {% endif %}
-{% endblock %}
- 
-{% block extra_js %}
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const link = document.getElementById("nav-favorites");
-        if (link) link.classList.add("active");
-    });
-</script>
 {% endblock %}

@@ -1,61 +1,54 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация | AI Recipe Assistant</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'style.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
+{% load i18n %}
 
-    <div class="auth-page-wrapper">
-        <div class="auth-container">
-            <div style="text-align: center; margin-bottom: 15px; font-size: 32px;">🍳</div>
-            <h2>Регистрация</h2>
-            <p class="subtitle">Создайте новый аккаунт за пару шагов</p>
+{% block title %}{% trans "Регистрация" %} | FridgeMaster{% endblock %}
+{% block page_title %}{% trans "Регистрация" %}{% endblock %}
 
-            {% if error %}
-                <div class="alert alert-danger">{{ error }}</div>
-            {% endif %}
-
-            <form action="" method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="reg-username">Имя пользователя</label>
-                    <input type="text" id="reg-username" name="username" placeholder="Username" required value="{% if request.POST.username %}{{ request.POST.username }}{% endif %}">
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Электронная почта</label>
-                    <input type="email" id="email" name="email" placeholder="example@mail.com" required value="{% if request.POST.email %}{{ request.POST.email }}{% endif %}">
-                </div>
-
-                <div class="form-group">
-                    <label for="reg-password-1">Пароль</label>
-                    <input type="password" id="reg-password-1" name="password1" placeholder="••••••••" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="reg-password-2">Подтвердите пароль</label>
-                    <input type="password" id="reg-password-2" name="password2" placeholder="••••••••" required>
-                </div>
-                
-                <button type="submit" class="btn-submit">Продолжить</button>
-            </form>
-
-            <div class="auth-footer">
-                Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
-            </div>
-            
-            <div style="text-align: center; margin-top: 25px; font-size: 13px;">
-                <a href="/" style="color: var(--text-secondary); text-decoration: none;">← На главную</a>
-            </div>
+{% block content %}
+<div class="card" style="max-width:500px; margin:0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div style="background: rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#ef4444; padding:14px 18px; border-radius:12px; margin-bottom:20px;">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <p style="margin:4px 0;">{{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <p style="margin:4px 0;">{{ error }}</p>
+            {% endfor %}
         </div>
-    </div>
+        {% endif %}
 
-</body>
-</html>
+        <div class="form-group">
+            <label class="form-label">{% trans "Имя пользователя" %}</label>
+            <input type="text" name="username" class="form-input" required autofocus>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{% trans "Электронная почта" %}</label>
+            <input type="email" name="email" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{% trans "Пароль" %}</label>
+            <input type="password" name="password1" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{% trans "Подтвердите пароль" %}</label>
+            <input type="password" name="password2" class="form-input" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-bottom:16px;">
+            <i class="ti ti-user-plus"></i>
+            {% trans "Зарегистрироваться" %}
+        </button>
+
+        <p style="text-align:center; color:var(--text-muted); font-size:14px;">
+            {% trans "Уже есть аккаунт?" %} <a href="{% url 'login' %}" style="color:var(--primary); font-weight:700; text-decoration:none;">{% trans "Войти" %}</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

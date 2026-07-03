@@ -1,8 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.utils import translation
+from django.conf import settings
 from groq import Groq
 from .utils import detect_products, build_multi_dish_prompt, parse_ai_dishes
 from .models import AIRecipeRequest, Recipe, Favorite, AIDishSuggestion, Ingredient, RecipeIngredient
+
+
+def set_language(request):
+    lang_code = request.GET.get('lang')
+    next_url = request.META.get('HTTP_REFERER', '/')
+    if lang_code and lang_code in [l[0] for l in settings.LANGUAGES]:
+        translation.activate(lang_code)
+        request.session['django_language'] = lang_code
+    return redirect(next_url)
 
 DISH_ICONS = ['🍲', '🥘', '🍳', '🥗', '🌮', '🍕', '🥙']
 DISH_ACCENTS = ['#ff6b35', '#8b5cf6', '#10b981', '#f59e0b', "#ea2587", '#06b6d4', '#ef4444']
@@ -93,16 +104,43 @@ def recipe_search(request):
 
 # ---------------------------------------------------------------------------------------------------
 
+import json
+
 @login_required
 def image_search(request):
     dishes = None
     result = None
     error = None
+    detected_ingredients_json = None
+
     if request.method == "POST":
+        manual_ingredients = request.POST.get("manual_ingredients")
         image = request.FILES.get("image")
-        if not image:
-            error = "Пожалуйста, выберите фото продуктов."
-        else:
+
+        # Case 1: User submitted manual ingredients to get recipes
+        if manual_ingredients:
+            try:
+                ingredients_data = json.loads(manual_ingredients)
+                if ingredients_data:
+                    ingredients_str = ", ".join(ingredients_data)
+                    ai_text = _call_ai_for_dishes(ingredients_str)
+                    ai_request = AIRecipeRequest.objects.create(
+                        user=request.user,
+                        ingredients_text=ingredients_str,
+                        detected_ingredients=ingredients_str,
+                        ai_response=ai_text,
+                    )
+                    dishes = _save_ai_dishes(
+                        request.user,
+                        ingredients_str,
+                        ai_text,
+                        ai_request=ai_request,
+                    )
+                    result = ai_request
+            except Exception as e:
+                error = f"Произошла ошибка: {str(e)}"
+        # Case 2: User uploaded image to detect ingredients
+        elif image:
             try:
                 obj = AIRecipeRequest.objects.create(
                     user=request.user,
@@ -114,33 +152,24 @@ def image_search(request):
                 products = detect_products(obj.image.path)
 
                 if not products:
-                    error = "Не удалось распознать продукты на фото. Пожалуйста, попробуйте другое изображение."
-                    obj.delete()
-                else:
-                    ingredients_str = ", ".join(products)
-                    ai_text = _call_ai_for_dishes(ingredients_str)
+                    products = []  # Empty list so user can add their own
 
-                    obj.detected_ingredients = ingredients_str
-                    obj.ai_response = ai_text
-                    obj.save()
-
-                    dishes = _save_ai_dishes(
-                        request.user,
-                        ingredients_str,
-                        ai_text,
-                        ai_request=obj,
-                    )
-                    result = obj
+                obj.detected_ingredients = ", ".join(products)
+                obj.save()
+                result = obj
+                detected_ingredients_json = products
             except Exception as e:
                 error = f"Произошла ошибка при анализе: {str(e)}"
+        else:
+            error = "Пожалуйста, загрузите фото или добавьте ингредиенты."
 
     return render(request, 'image_search.html', {
         'result': result,
         'dishes': dishes,
-        'dishes_json': [serialize_dish_card(d) for d in dishes] if dishes else None,
         'detected_ingredients_json': (
-            [i.strip() for i in result.detected_ingredients.split(',') if i.strip()]
-            if result and result.detected_ingredients else None
+            detected_ingredients_json or
+            ([i.strip() for i in result.detected_ingredients.split(',') if i.strip()]
+             if result and result.detected_ingredients else None)
         ),
         'error': error,
     })
@@ -234,6 +263,14 @@ def history(request):
     return render(request, "history.html", {
         "items": items
     })
+
+
+@login_required
+def clear_history(request):
+    if request.method == "POST":
+        # Delete all user's history
+        AIRecipeRequest.objects.filter(user=request.user).delete()
+    return redirect('history')
 
 # ------------------------------------------------------------------------------------------------
 
